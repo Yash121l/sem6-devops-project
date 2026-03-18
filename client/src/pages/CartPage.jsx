@@ -69,10 +69,11 @@ function FreeShippingProgress({ current, threshold }) {
  */
 function CartItem({ item }) {
   const { updateQuantity, removeItem } = useCart();
+  const productPath = `/product/${item.slug || item.id}`;
 
   return (
     <div className="flex gap-4 py-6">
-      <Link to={`/product/${item.id}`} className="flex-shrink-0">
+      <Link to={productPath} className="flex-shrink-0">
         <img
           src={item.image}
           alt={item.name}
@@ -84,7 +85,7 @@ function CartItem({ item }) {
         <div className="flex justify-between gap-4">
           <div>
             <Link
-              to={`/product/${item.id}`}
+              to={productPath}
               className="font-medium hover:text-primary line-clamp-2"
             >
               {item.name}

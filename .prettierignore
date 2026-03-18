@@ -1,6 +1,7 @@
 client/dist
 client/coverage
 client/node_modules
+client/public/mockServiceWorker.js
 server/dist
 server/coverage
 server/node_modules

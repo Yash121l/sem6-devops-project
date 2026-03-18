@@ -1,4 +1,5 @@
 import "@testing-library/jest-dom";
+import { server } from "@/mocks/server";
 
 function createMockStorage() {
   const store = new Map();
@@ -33,4 +34,16 @@ Object.defineProperty(globalThis, "localStorage", {
 
 beforeEach(() => {
   window.localStorage.clear();
+});
+
+beforeAll(() => {
+  server.listen({ onUnhandledRequest: "error" });
+});
+
+afterEach(() => {
+  server.resetHandlers();
+});
+
+afterAll(() => {
+  server.close();
 });

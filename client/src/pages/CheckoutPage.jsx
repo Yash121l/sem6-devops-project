@@ -529,6 +529,7 @@ export function CheckoutPage() {
   const navigate = useNavigate();
   const { items, subtotal, hasFreeShipping, clearCart } = useCart();
   const [step, setStep] = useState(1);
+  const [isCompletingOrder, setIsCompletingOrder] = useState(false);
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -547,15 +548,16 @@ export function CheckoutPage() {
   });
 
   const handleComplete = () => {
+    setIsCompletingOrder(true);
     // Generate order number
     const orderNumber = `SS-${Date.now().toString(36).toUpperCase()}`;
-    // Clear cart
-    clearCart();
     // Navigate to confirmation
     navigate(`/order-confirmation/${orderNumber}`);
+    // Clear cart after the order is accepted
+    clearCart();
   };
 
-  if (items.length === 0) {
+  if (items.length === 0 && !isCompletingOrder) {
     navigate("/cart");
     return null;
   }

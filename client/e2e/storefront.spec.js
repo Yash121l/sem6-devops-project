@@ -1,132 +1,103 @@
 import { expect, test } from "@playwright/test";
+import { mockUser } from "../src/mocks/data.js";
 
-const mockCategories = [
-  {
-    id: "category-1",
-    name: "Electronics",
-    slug: "electronics",
-    description: "Tech essentials.",
-    imageUrl: "https://example.com/electronics.jpg",
-    metadata: {
-      subcategories: ["Audio", "Wearables"],
-    },
-  },
-];
+const session = {
+  accessToken: "test-access-token",
+  refreshToken: "test-refresh-token",
+  expiresIn: 900,
+};
 
-const mockProducts = [
-  {
-    id: "product-1",
-    name: "Premium Wireless Headphones",
-    slug: "premium-wireless-headphones",
-    shortDescription: "Noise cancelling flagship headphones.",
-    description: "Long-form product description.",
-    basePrice: "249.99",
-    compareAtPrice: "349.99",
-    images: ["https://example.com/headphones.jpg"],
-    isFeatured: true,
-    createdAt: new Date().toISOString(),
-    attributes: {
-      rating: 4.8,
-      reviewCount: 125,
-      soldThisWeek: 210,
-    },
-    category: {
-      slug: "electronics",
-      name: "Electronics",
-    },
-    variants: [],
-  },
-];
+async function seedLocalStorage(page, values) {
+  await page.addInitScript((entries) => {
+    window.localStorage.clear();
 
-test.beforeEach(async ({ page }) => {
-  await page.route("**/api/v1/**", async (route) => {
-    const url = new URL(route.request().url());
+    Object.entries(entries).forEach(([key, value]) => {
+      window.localStorage.setItem(key, JSON.stringify(value));
+    });
+  }, values);
+}
 
-    if (url.pathname.endsWith("/categories")) {
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify({ success: true, data: mockCategories }),
-      });
-      return;
-    }
+test.describe("Storefront E2E", () => {
+  test("signs in and browses a live mocked catalog", async ({ page }) => {
+    await page.goto("/login");
 
-    if (url.pathname.endsWith("/products")) {
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify({ success: true, data: mockProducts }),
-      });
-      return;
-    }
+    await page.getByLabel("Email Address").fill("test@example.com");
+    await page.getByLabel("Password").fill("Password123!");
+    await page.getByRole("button", { name: "Sign In" }).click();
 
-    if (url.pathname.endsWith("/products/slug/premium-wireless-headphones")) {
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify({ success: true, data: mockProducts[0] }),
-      });
-      return;
-    }
+    await expect(page).toHaveURL(/\/$/);
+    await expect(page.getByText("Live catalog connected")).toBeVisible();
 
-    if (url.pathname.endsWith("/auth/login")) {
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify({
-          success: true,
-          data: {
-            accessToken: "test-access-token",
-            refreshToken: "test-refresh-token",
-            expiresIn: 900,
-          },
-        }),
-      });
-      return;
-    }
+    await page
+      .getByRole("link", { name: /premium wireless headphones/i })
+      .first()
+      .click();
 
-    if (url.pathname.endsWith("/users/me")) {
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify({
-          success: true,
-          data: {
-            id: "user-1",
-            firstName: "Test",
-            lastName: "User",
-            email: "test@example.com",
-          },
-        }),
-      });
-      return;
-    }
-
-    await route.abort();
+    await expect(page).toHaveURL(/\/product\/premium-wireless-headphones$/);
+    await expect(
+      page.getByRole("heading", {
+        level: 1,
+        name: "Premium Wireless Headphones",
+      }),
+    ).toBeVisible();
+    await expect(page.getByText("Only 3 left in stock")).toBeVisible();
   });
-});
 
-test("signs in through the API flow and adds an item to the cart", async ({
-  page,
-}) => {
-  await page.goto("/login");
+  test("adds an item to cart and completes checkout", async ({ page }) => {
+    await seedLocalStorage(page, {
+      shopsmart_user: {
+        id: mockUser.id,
+        name: `${mockUser.firstName} ${mockUser.lastName}`,
+        email: mockUser.email,
+        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${mockUser.email}`,
+      },
+      shopsmart_session: session,
+    });
 
-  await page.getByLabel("Email Address").fill("test@example.com");
-  await page.getByLabel("Password").fill("Password123!");
-  await page.getByRole("button", { name: "Sign In" }).click();
+    await page.goto("/product/premium-wireless-headphones");
 
-  await expect(page).toHaveURL(/\/$/);
-  await expect(page.getByText("Live catalog connected")).toBeVisible();
+    await page.getByTestId("product-add-to-cart").click();
+    await expect(page.getByText(/Your Cart \(1\)/)).toBeVisible();
 
-  await page
-    .getByRole("link", { name: /premium wireless headphones/i })
-    .first()
-    .click();
-  await expect(page).toHaveURL(/\/product\/premium-wireless-headphones$/);
-  await page.getByRole("button", { name: "Add to Cart" }).click();
+    await page.getByRole("link", { name: "Proceed to Checkout" }).click();
+    await expect(page).toHaveURL(/\/checkout$/);
 
-  await expect(page.getByText(/Your Cart \(1\)/)).toBeVisible();
-  await expect(
-    page.getByRole("link", { name: "Proceed to Checkout" }),
-  ).toBeVisible();
+    await page.getByLabel("First Name *").fill("Test");
+    await page.getByLabel("Last Name *").fill("User");
+    await page.getByLabel("Email Address *").fill("test@example.com");
+    await page.getByLabel("Street Address *").fill("221B Baker Street");
+    await page.getByLabel("City *").fill("Mumbai");
+    await page.getByLabel("State *").fill("MH");
+    await page.getByLabel("ZIP Code *").fill("400001");
+    await page.getByRole("button", { name: "Continue to Payment" }).click();
+
+    await page.getByLabel("Card Number *").fill("4242 4242 4242 4242");
+    await page.getByLabel("Name on Card *").fill("Test User");
+    await page.getByLabel("Expiry Date *").fill("12/30");
+    await page.getByLabel("CVV *").fill("123");
+    await page.getByRole("button", { name: "Review Order" }).click();
+
+    await expect(page.getByText("Review Your Order")).toBeVisible();
+    await page.getByRole("button", { name: /Place Order/i }).click();
+
+    await expect(page).toHaveURL(/\/order-confirmation\/SS-/);
+    await expect(
+      page.getByRole("heading", { name: "Order Confirmed!" }),
+    ).toBeVisible();
+  });
+
+  test("adds a product to wishlist and moves it into the cart", async ({
+    page,
+  }) => {
+    await page.goto("/product/premium-wireless-headphones");
+
+    await page.getByTestId("product-toggle-wishlist").click();
+    await page.getByRole("link", { name: "Wishlist" }).click();
+
+    await expect(page).toHaveURL(/\/wishlist$/);
+    await expect(page.getByText("My Wishlist (1 item)")).toBeVisible();
+
+    await page.getByRole("button", { name: "Add to Cart" }).click();
+    await expect(page.getByText(/Your Cart \(1\)/)).toBeVisible();
+  });
 });

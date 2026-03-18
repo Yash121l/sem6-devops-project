@@ -24,7 +24,7 @@ module.exports = {
       version: "detect",
     },
   },
-  ignorePatterns: ["dist", "coverage"],
+  ignorePatterns: ["dist", "coverage", "public/mockServiceWorker.js"],
   rules: {
     "react/react-in-jsx-scope": "off",
     "react/prop-types": "off",
