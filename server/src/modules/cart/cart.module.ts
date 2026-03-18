@@ -11,21 +11,21 @@ import { InventoryModule } from '@modules/inventory/inventory.module';
 import { CouponsModule } from '@modules/coupons/coupons.module';
 
 @Module({
-    imports: [
-        TypeOrmModule.forFeature([Cart, CartItem]),
-        JwtModule.registerAsync({
-            imports: [ConfigModule],
-            inject: [ConfigService],
-            useFactory: (configService: ConfigService) => ({
-                secret: configService.get<string>('JWT_SECRET'),
-            }),
-        }),
-        ProductsModule,
-        InventoryModule,
-        forwardRef(() => CouponsModule),
-    ],
-    controllers: [CartController],
-    providers: [CartService],
-    exports: [CartService],
+  imports: [
+    TypeOrmModule.forFeature([Cart, CartItem]),
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        secret: configService.get<string>('JWT_SECRET'),
+      }),
+    }),
+    ProductsModule,
+    InventoryModule,
+    forwardRef(() => CouponsModule),
+  ],
+  controllers: [CartController],
+  providers: [CartService],
+  exports: [CartService],
 })
-export class CartModule { }
+export class CartModule {}

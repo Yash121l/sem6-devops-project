@@ -23,14 +23,19 @@ export function OrderConfirmationPage() {
           <CheckCircle className="h-10 w-10 text-success" />
         </div>
 
-        <h1 className="font-heading text-2xl font-bold mb-2">Order Confirmed!</h1>
+        <h1 className="font-heading text-2xl font-bold mb-2">
+          Order Confirmed!
+        </h1>
         <p className="text-muted-foreground mb-6">
-          Thank you for your purchase. Your order has been received and is being processed.
+          Thank you for your purchase. Your order has been received and is being
+          processed.
         </p>
 
         <div className="bg-muted rounded-lg p-4 mb-6">
           <p className="text-sm text-muted-foreground">Order Number</p>
-          <p className="text-xl font-mono font-bold">{orderId || "SS-XXXXXX"}</p>
+          <p className="text-xl font-mono font-bold">
+            {orderId || "SS-XXXXXX"}
+          </p>
         </div>
 
         <div className="space-y-3 text-left mb-8">

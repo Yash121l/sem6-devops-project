@@ -8,19 +8,19 @@ import { Payment } from './entities/payment.entity';
 import { OrdersModule } from '@modules/orders/orders.module';
 
 @Module({
-    imports: [
-        TypeOrmModule.forFeature([Payment]),
-        JwtModule.registerAsync({
-            imports: [ConfigModule],
-            inject: [ConfigService],
-            useFactory: (configService: ConfigService) => ({
-                secret: configService.get<string>('JWT_SECRET'),
-            }),
-        }),
-        forwardRef(() => OrdersModule),
-    ],
-    controllers: [PaymentsController],
-    providers: [PaymentsService],
-    exports: [PaymentsService],
+  imports: [
+    TypeOrmModule.forFeature([Payment]),
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        secret: configService.get<string>('JWT_SECRET'),
+      }),
+    }),
+    forwardRef(() => OrdersModule),
+  ],
+  controllers: [PaymentsController],
+  providers: [PaymentsService],
+  exports: [PaymentsService],
 })
-export class PaymentsModule { }
+export class PaymentsModule {}

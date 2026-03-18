@@ -4,6 +4,7 @@
  */
 
 import React, { createContext, useContext, useReducer, useEffect } from "react";
+import { loadStoredJson, saveStoredJson } from "@/lib/storage";
 
 /**
  * @typedef {Object} CartItem
@@ -59,7 +60,7 @@ function cartReducer(state, action) {
         (item) =>
           item.id === action.payload.id &&
           item.size === action.payload.size &&
-          item.color === action.payload.color
+          item.color === action.payload.color,
       );
 
       if (existingIndex >= 0) {
@@ -70,7 +71,10 @@ function cartReducer(state, action) {
 
       return {
         ...state,
-        items: [...state.items, { ...action.payload, quantity: action.payload.quantity || 1 }],
+        items: [
+          ...state.items,
+          { ...action.payload, quantity: action.payload.quantity || 1 },
+        ],
       };
     }
 
@@ -79,9 +83,11 @@ function cartReducer(state, action) {
         ...state,
         items: state.items.filter(
           (item) =>
-            !(item.id === action.payload.id &&
+            !(
+              item.id === action.payload.id &&
               item.size === action.payload.size &&
-              item.color === action.payload.color)
+              item.color === action.payload.color
+            ),
         ),
       };
     }
@@ -89,13 +95,15 @@ function cartReducer(state, action) {
     case CartActionTypes.UPDATE_QUANTITY: {
       return {
         ...state,
-        items: state.items.map((item) =>
-          item.id === action.payload.id &&
-          item.size === action.payload.size &&
-          item.color === action.payload.color
-            ? { ...item, quantity: Math.max(0, action.payload.quantity) }
-            : item
-        ).filter((item) => item.quantity > 0),
+        items: state.items
+          .map((item) =>
+            item.id === action.payload.id &&
+            item.size === action.payload.size &&
+            item.color === action.payload.color
+              ? { ...item, quantity: Math.max(0, action.payload.quantity) }
+              : item,
+          )
+          .filter((item) => item.quantity > 0),
       };
     }
 
@@ -128,24 +136,15 @@ export function CartProvider({ children }) {
 
   // Load cart from localStorage on mount
   useEffect(() => {
-    try {
-      const savedCart = localStorage.getItem(CART_STORAGE_KEY);
-      if (savedCart) {
-        const parsed = JSON.parse(savedCart);
-        dispatch({ type: CartActionTypes.LOAD_CART, payload: parsed });
-      }
-    } catch (error) {
-      console.error("Error loading cart from localStorage:", error);
+    const savedCart = loadStoredJson(CART_STORAGE_KEY, []);
+    if (savedCart.length > 0) {
+      dispatch({ type: CartActionTypes.LOAD_CART, payload: savedCart });
     }
   }, []);
 
   // Save cart to localStorage on changes
   useEffect(() => {
-    try {
-      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(state.items));
-    } catch (error) {
-      console.error("Error saving cart to localStorage:", error);
-    }
+    saveStoredJson(CART_STORAGE_KEY, state.items);
   }, [state.items]);
 
   /**
@@ -163,7 +162,10 @@ export function CartProvider({ children }) {
    * @param {string} [color] - Color variant
    */
   const removeItem = (id, size, color) => {
-    dispatch({ type: CartActionTypes.REMOVE_ITEM, payload: { id, size, color } });
+    dispatch({
+      type: CartActionTypes.REMOVE_ITEM,
+      payload: { id, size, color },
+    });
   };
 
   /**
@@ -174,7 +176,10 @@ export function CartProvider({ children }) {
    * @param {string} [color] - Color variant
    */
   const updateQuantity = (id, quantity, size, color) => {
-    dispatch({ type: CartActionTypes.UPDATE_QUANTITY, payload: { id, quantity, size, color } });
+    dispatch({
+      type: CartActionTypes.UPDATE_QUANTITY,
+      payload: { id, quantity, size, color },
+    });
   };
 
   /**
@@ -194,7 +199,10 @@ export function CartProvider({ children }) {
 
   // Computed values
   const itemCount = state.items.reduce((sum, item) => sum + item.quantity, 0);
-  const subtotal = state.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const subtotal = state.items.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0,
+  );
   const amountToFreeShipping = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
   const hasFreeShipping = subtotal >= FREE_SHIPPING_THRESHOLD;
 

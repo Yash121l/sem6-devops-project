@@ -5,15 +5,21 @@
 
 import React, { useState, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ChevronRight, SlidersHorizontal, Grid, LayoutGrid, X } from "lucide-react";
+import {
+  ChevronRight,
+  SlidersHorizontal,
+  Grid,
+  LayoutGrid,
+  X,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ProductCard } from "@/components/product/ProductCard";
-import { products } from "@/data/products";
-import { getCategoryById, categories } from "@/data/categories";
+import {
+  useStorefrontCategories,
+  useStorefrontProducts,
+} from "@/hooks/useStorefront";
 import { cn } from "@/lib/utils";
 
 /**
@@ -46,19 +52,33 @@ function FilterSidebar({ filters, setFilters, onClose, isMobile }) {
         <h4 className="font-medium mb-3">Price Range</h4>
         <div className="space-y-2">
           {priceRanges.map((range, index) => (
-            <label key={index} className="flex items-center gap-2 cursor-pointer">
+            <label
+              key={index}
+              className="flex items-center gap-2 cursor-pointer"
+            >
               <input
                 type="radio"
                 name="priceRange"
-                checked={filters.priceMin === range.min && filters.priceMax === range.max}
-                onChange={() => setFilters({ ...filters, priceMin: range.min, priceMax: range.max })}
+                checked={
+                  filters.priceMin === range.min &&
+                  filters.priceMax === range.max
+                }
+                onChange={() =>
+                  setFilters({
+                    ...filters,
+                    priceMin: range.min,
+                    priceMax: range.max,
+                  })
+                }
                 className="text-primary focus:ring-primary"
               />
               <span className="text-sm">{range.label}</span>
             </label>
           ))}
           <button
-            onClick={() => setFilters({ ...filters, priceMin: 0, priceMax: Infinity })}
+            onClick={() =>
+              setFilters({ ...filters, priceMin: 0, priceMax: Infinity })
+            }
             className="text-sm text-primary hover:underline"
           >
             Clear
@@ -73,7 +93,10 @@ function FilterSidebar({ filters, setFilters, onClose, isMobile }) {
         <h4 className="font-medium mb-3">Rating</h4>
         <div className="space-y-2">
           {ratings.map((rating) => (
-            <label key={rating} className="flex items-center gap-2 cursor-pointer">
+            <label
+              key={rating}
+              className="flex items-center gap-2 cursor-pointer"
+            >
               <input
                 type="radio"
                 name="rating"
@@ -105,7 +128,9 @@ function FilterSidebar({ filters, setFilters, onClose, isMobile }) {
           <input
             type="checkbox"
             checked={filters.inStockOnly}
-            onChange={(e) => setFilters({ ...filters, inStockOnly: e.target.checked })}
+            onChange={(e) =>
+              setFilters({ ...filters, inStockOnly: e.target.checked })
+            }
             className="text-primary focus:ring-primary rounded"
           />
           <span className="text-sm">In Stock Only</span>
@@ -121,7 +146,9 @@ function FilterSidebar({ filters, setFilters, onClose, isMobile }) {
           <input
             type="checkbox"
             checked={filters.onSaleOnly}
-            onChange={(e) => setFilters({ ...filters, onSaleOnly: e.target.checked })}
+            onChange={(e) =>
+              setFilters({ ...filters, onSaleOnly: e.target.checked })
+            }
             className="text-primary focus:ring-primary rounded"
           />
           <span className="text-sm">On Sale</span>
@@ -143,7 +170,9 @@ function FilterSidebar({ filters, setFilters, onClose, isMobile }) {
  */
 export function CategoryPage() {
   const { categoryId } = useParams();
-  const category = getCategoryById(categoryId);
+  const { data: categories } = useStorefrontCategories();
+  const { data: categoryProducts } = useStorefrontProducts({ categoryId });
+  const category = categories.find((entry) => entry.id === categoryId);
 
   const [filters, setFilters] = useState({
     priceMin: 0,
@@ -158,13 +187,12 @@ export function CategoryPage() {
 
   // Filter and sort products
   const filteredProducts = useMemo(() => {
-    let result = categoryId
-      ? products.filter((p) => p.category === categoryId)
-      : products;
+    let result = categoryId ? [...categoryProducts] : [...categoryProducts];
 
     // Apply filters
     result = result.filter((p) => {
-      if (p.price < filters.priceMin || p.price > filters.priceMax) return false;
+      if (p.price < filters.priceMin || p.price > filters.priceMax)
+        return false;
       if (p.rating < filters.minRating) return false;
       if (filters.inStockOnly && p.stock === 0) return false;
       if (filters.onSaleOnly && p.discount === 0) return false;
@@ -191,7 +219,7 @@ export function CategoryPage() {
     }
 
     return result;
-  }, [categoryId, filters, sortBy]);
+  }, [categoryId, categoryProducts, filters, sortBy]);
 
   const activeFilterCount = [
     filters.priceMin > 0 || filters.priceMax < Infinity,
@@ -220,7 +248,9 @@ export function CategoryPage() {
               Home
             </Link>
             <ChevronRight className="h-4 w-4 text-muted-foreground" />
-            <span className="font-medium">{category?.name || "All Products"}</span>
+            <span className="font-medium">
+              {category?.name || "All Products"}
+            </span>
           </nav>
         </div>
       </div>
@@ -272,7 +302,7 @@ export function CategoryPage() {
                 onClick={() => setGridCols(3)}
                 className={cn(
                   "p-2 rounded-l-md",
-                  gridCols === 3 ? "bg-primary text-white" : "hover:bg-muted"
+                  gridCols === 3 ? "bg-primary text-white" : "hover:bg-muted",
                 )}
               >
                 <Grid className="h-4 w-4" />
@@ -281,7 +311,7 @@ export function CategoryPage() {
                 onClick={() => setGridCols(4)}
                 className={cn(
                   "p-2 rounded-r-md",
-                  gridCols === 4 ? "bg-primary text-white" : "hover:bg-muted"
+                  gridCols === 4 ? "bg-primary text-white" : "hover:bg-muted",
                 )}
               >
                 <LayoutGrid className="h-4 w-4" />
@@ -293,12 +323,17 @@ export function CategoryPage() {
         {/* Active filters */}
         {activeFilterCount > 0 && (
           <div className="flex flex-wrap items-center gap-2 mt-4">
-            <span className="text-sm text-muted-foreground">Active filters:</span>
+            <span className="text-sm text-muted-foreground">
+              Active filters:
+            </span>
             {(filters.priceMin > 0 || filters.priceMax < Infinity) && (
               <Badge variant="secondary">
-                ${filters.priceMin} - {filters.priceMax === Infinity ? "∞" : `$${filters.priceMax}`}
+                ${filters.priceMin} -{" "}
+                {filters.priceMax === Infinity ? "∞" : `$${filters.priceMax}`}
                 <button
-                  onClick={() => setFilters({ ...filters, priceMin: 0, priceMax: Infinity })}
+                  onClick={() =>
+                    setFilters({ ...filters, priceMin: 0, priceMax: Infinity })
+                  }
                   className="ml-1"
                 >
                   <X className="h-3 w-3" />
@@ -308,7 +343,10 @@ export function CategoryPage() {
             {filters.minRating > 0 && (
               <Badge variant="secondary">
                 {filters.minRating}+ stars
-                <button onClick={() => setFilters({ ...filters, minRating: 0 })} className="ml-1">
+                <button
+                  onClick={() => setFilters({ ...filters, minRating: 0 })}
+                  className="ml-1"
+                >
                   <X className="h-3 w-3" />
                 </button>
               </Badge>
@@ -316,7 +354,10 @@ export function CategoryPage() {
             {filters.inStockOnly && (
               <Badge variant="secondary">
                 In Stock
-                <button onClick={() => setFilters({ ...filters, inStockOnly: false })} className="ml-1">
+                <button
+                  onClick={() => setFilters({ ...filters, inStockOnly: false })}
+                  className="ml-1"
+                >
                   <X className="h-3 w-3" />
                 </button>
               </Badge>
@@ -324,12 +365,18 @@ export function CategoryPage() {
             {filters.onSaleOnly && (
               <Badge variant="secondary">
                 On Sale
-                <button onClick={() => setFilters({ ...filters, onSaleOnly: false })} className="ml-1">
+                <button
+                  onClick={() => setFilters({ ...filters, onSaleOnly: false })}
+                  className="ml-1"
+                >
                   <X className="h-3 w-3" />
                 </button>
               </Badge>
             )}
-            <button onClick={clearAllFilters} className="text-sm text-primary hover:underline">
+            <button
+              onClick={clearAllFilters}
+              className="text-sm text-primary hover:underline"
+            >
               Clear all
             </button>
           </div>
@@ -361,7 +408,7 @@ export function CategoryPage() {
                   "grid gap-4 lg:gap-6",
                   gridCols === 3
                     ? "grid-cols-2 lg:grid-cols-3"
-                    : "grid-cols-2 lg:grid-cols-4"
+                    : "grid-cols-2 lg:grid-cols-4",
                 )}
               >
                 {filteredProducts.map((product) => (

@@ -17,15 +17,15 @@ import { cn, getStarRating } from "@/lib/utils";
  * @param {string} [props.className] - Additional classes
  * @returns {JSX.Element} Rating display
  */
-export function Rating({ 
-  rating, 
-  reviewCount, 
-  showCount = true, 
+export function Rating({
+  rating,
+  reviewCount,
+  showCount = true,
   size = "md",
-  className 
+  className,
 }) {
   const stars = getStarRating(rating);
-  
+
   const sizeClasses = {
     sm: "h-3 w-3",
     md: "h-4 w-4",

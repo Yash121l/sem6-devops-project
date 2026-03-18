@@ -5,26 +5,24 @@
 
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { 
-  Search, 
-  ShoppingCart, 
-  Heart, 
-  User, 
-  Menu, 
-  X, 
+import {
+  Search,
+  ShoppingCart,
+  Heart,
+  User,
+  Menu,
+  X,
   ChevronDown,
   Package,
   LogOut,
-  Settings
+  Settings,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
 import { useUser } from "@/context/UserContext";
-import { categories } from "@/data/categories";
-import { cn } from "@/lib/utils";
+import { useStorefrontCategories } from "@/hooks/useStorefront";
 
 /**
  * Header component
@@ -38,7 +36,8 @@ export function Header() {
 
   const { itemCount, toggleCart } = useCart();
   const { itemCount: wishlistCount } = useWishlist();
-  const { user, isAuthenticated, logout } = useUser();
+  const { user, isAuthenticated, logout, authSource } = useUser();
+  const { data: categories } = useStorefrontCategories();
   const navigate = useNavigate();
 
   const handleSearch = (e) => {
@@ -54,7 +53,10 @@ export function Header() {
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       {/* Top bar - promotions */}
       <div className="bg-primary text-primary-foreground text-center py-2 text-sm">
-        <p>🎉 Free shipping on orders over $75! Use code: <strong>FREESHIP</strong></p>
+        <p>
+          🎉 Free shipping on orders over $75! Use code:{" "}
+          <strong>FREESHIP</strong>
+        </p>
       </div>
 
       {/* Main header */}
@@ -68,21 +70,31 @@ export function Header() {
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             aria-label="Toggle menu"
           >
-            {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            {isMobileMenuOpen ? (
+              <X className="h-5 w-5" />
+            ) : (
+              <Menu className="h-5 w-5" />
+            )}
           </Button>
 
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 font-heading text-xl font-bold text-primary">
+          <Link
+            to="/"
+            className="flex items-center gap-2 font-heading text-xl font-bold text-primary"
+          >
             <Package className="h-6 w-6" />
             <span className="hidden sm:inline">ShopSmart</span>
           </Link>
 
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center gap-6">
-            <Link to="/" className="text-sm font-medium hover:text-primary transition-colors">
+            <Link
+              to="/"
+              className="text-sm font-medium hover:text-primary transition-colors"
+            >
               Home
             </Link>
-            
+
             {/* Categories dropdown */}
             <div className="relative group">
               <button className="flex items-center gap-1 text-sm font-medium hover:text-primary transition-colors">
@@ -104,19 +116,31 @@ export function Header() {
               </div>
             </div>
 
-            <Link to="/category/clothing" className="text-sm font-medium hover:text-primary transition-colors">
+            <Link
+              to="/category/clothing"
+              className="text-sm font-medium hover:text-primary transition-colors"
+            >
               New Arrivals
             </Link>
-            <Link to="/category/electronics" className="text-sm font-medium hover:text-primary transition-colors">
+            <Link
+              to="/category/electronics"
+              className="text-sm font-medium hover:text-primary transition-colors"
+            >
               Best Sellers
             </Link>
-            <Link to="/contact" className="text-sm font-medium hover:text-primary transition-colors">
+            <Link
+              to="/contact"
+              className="text-sm font-medium hover:text-primary transition-colors"
+            >
               Contact
             </Link>
           </nav>
 
           {/* Search bar - desktop */}
-          <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-md mx-4">
+          <form
+            onSubmit={handleSearch}
+            className="hidden md:flex flex-1 max-w-md mx-4"
+          >
             <div className="relative w-full">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -179,7 +203,11 @@ export function Header() {
                 aria-label="User menu"
               >
                 {isAuthenticated && user?.avatar ? (
-                  <img src={user.avatar} alt={user.name} className="h-6 w-6 rounded-full" />
+                  <img
+                    src={user.avatar}
+                    alt={user.name}
+                    className="h-6 w-6 rounded-full"
+                  />
                 ) : (
                   <User className="h-5 w-5" />
                 )}
@@ -191,7 +219,14 @@ export function Header() {
                     <>
                       <div className="px-3 py-2 border-b mb-2">
                         <p className="font-medium text-sm">{user?.name}</p>
-                        <p className="text-xs text-muted-foreground">{user?.email}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {user?.email}
+                        </p>
+                        <p className="text-[11px] uppercase tracking-wide text-muted-foreground/80">
+                          {authSource === "api"
+                            ? "API session"
+                            : "Demo session"}
+                        </p>
                       </div>
                       <Link
                         to="/account"

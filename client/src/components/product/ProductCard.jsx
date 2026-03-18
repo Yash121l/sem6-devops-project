@@ -70,7 +70,9 @@ export function ProductCard({ product, className }) {
             <Badge variant="sale">-{product.discount}%</Badge>
           )}
           {product.isNew && <Badge variant="new">New</Badge>}
-          {product.isBestseller && <Badge variant="bestseller">Bestseller</Badge>}
+          {product.isBestseller && (
+            <Badge variant="bestseller">Bestseller</Badge>
+          )}
         </div>
 
         {/* Quick actions */}
@@ -82,7 +84,12 @@ export function ProductCard({ product, className }) {
             onClick={handleToggleWishlist}
             aria-label={inWishlist ? "Remove from wishlist" : "Add to wishlist"}
           >
-            <Heart className={cn("h-4 w-4", inWishlist && "fill-red-500 text-red-500")} />
+            <Heart
+              className={cn(
+                "h-4 w-4",
+                inWishlist && "fill-red-500 text-red-500",
+              )}
+            />
           </Button>
           <Button
             size="icon"
@@ -98,11 +105,7 @@ export function ProductCard({ product, className }) {
 
         {/* Add to cart overlay */}
         <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
-          <Button
-            className="w-full"
-            size="sm"
-            onClick={handleAddToCart}
-          >
+          <Button className="w-full" size="sm" onClick={handleAddToCart}>
             <ShoppingCart className="h-4 w-4 mr-2" />
             Add to Cart
           </Button>
@@ -121,16 +124,25 @@ export function ProductCard({ product, className }) {
       {/* Content */}
       <div className="p-4">
         <Link to={`/product/${product.slug}`} className="block">
-          <p className="text-xs text-muted-foreground mb-1">{product.categoryName}</p>
+          <p className="text-xs text-muted-foreground mb-1">
+            {product.categoryName}
+          </p>
           <h3 className="font-medium text-sm line-clamp-2 group-hover:text-primary transition-colors">
             {product.name}
           </h3>
         </Link>
 
-        <Rating rating={product.rating} reviewCount={product.reviewCount} size="sm" className="mt-2" />
+        <Rating
+          rating={product.rating}
+          reviewCount={product.reviewCount}
+          size="sm"
+          className="mt-2"
+        />
 
         <div className="mt-2 flex items-center gap-2">
-          <span className="font-semibold text-lg">{formatPrice(product.price)}</span>
+          <span className="font-semibold text-lg">
+            {formatPrice(product.price)}
+          </span>
           {product.originalPrice && (
             <span className="text-sm text-muted-foreground line-through">
               {formatPrice(product.originalPrice)}
