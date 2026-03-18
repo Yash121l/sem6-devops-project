@@ -229,6 +229,7 @@ export function ProductPage() {
   const handleAddToCart = () => {
     addItem({
       id: product.id,
+      slug: product.slug,
       name: product.name,
       price: product.price,
       image: product.images[0],
@@ -242,6 +243,7 @@ export function ProductPage() {
   const handleToggleWishlist = () => {
     toggleWishlist({
       id: product.id,
+      slug: product.slug,
       name: product.name,
       price: product.price,
       image: product.images[0],
@@ -421,6 +423,7 @@ export function ProductPage() {
                 className="flex-1"
                 onClick={handleAddToCart}
                 disabled={product.stock === 0}
+                data-testid="product-add-to-cart"
               >
                 <ShoppingCart className="h-5 w-5 mr-2" />
                 {product.stock === 0 ? "Out of Stock" : "Add to Cart"}
@@ -431,6 +434,10 @@ export function ProductPage() {
                 size="xl"
                 variant="outline"
                 onClick={handleToggleWishlist}
+                aria-label={
+                  inWishlist ? "Remove from wishlist" : "Add to wishlist"
+                }
+                data-testid="product-toggle-wishlist"
               >
                 <Heart
                   className={cn(

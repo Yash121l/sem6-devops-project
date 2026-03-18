@@ -30,6 +30,7 @@ The server follows NestJS module boundaries: controller -> service -> repository
 
 - ESLint on both client and server.
 - Vitest for frontend unit/integration tests.
+- MSW for frontend API mocking in both Vitest and browser E2E runs.
 - Jest for backend unit/integration tests.
 - Playwright for frontend E2E coverage.
 - GitHub Actions for push and pull request validation.

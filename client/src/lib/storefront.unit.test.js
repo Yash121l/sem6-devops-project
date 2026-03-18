@@ -1,42 +1,42 @@
-import { describe, expect, it, vi, afterEach } from "vitest";
+import { describe, expect, it } from "vitest";
+import { http, HttpResponse } from "msw";
 import { fetchProducts, getFallbackCatalog } from "@/lib/storefront";
+import { server } from "@/mocks/server";
 
 describe("storefront helpers", () => {
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
-
   it("maps API products into the frontend storefront shape", async () => {
-    vi.spyOn(globalThis, "fetch").mockResolvedValue({
-      ok: true,
-      json: async () => ({
-        data: [
-          {
-            id: "prod_1",
-            name: "Premium Wireless Headphones",
-            slug: "premium-wireless-headphones",
-            shortDescription: "Noise cancelling flagship headphones.",
-            description: "Full description",
-            basePrice: "249.99",
-            compareAtPrice: "349.99",
-            images: ["https://example.com/headphones.jpg"],
-            isFeatured: true,
-            createdAt: new Date().toISOString(),
-            attributes: {
-              rating: 4.9,
-              reviewCount: 120,
-              soldThisWeek: 88,
-              tags: ["audio", "premium"],
+    server.use(
+      http.get("/api/v1/products", () =>
+        HttpResponse.json({
+          success: true,
+          data: [
+            {
+              id: "prod_1",
+              name: "Premium Wireless Headphones",
+              slug: "premium-wireless-headphones",
+              shortDescription: "Noise cancelling flagship headphones.",
+              description: "Full description",
+              basePrice: "249.99",
+              compareAtPrice: "349.99",
+              images: ["https://example.com/headphones.jpg"],
+              isFeatured: true,
+              createdAt: new Date().toISOString(),
+              attributes: {
+                rating: 4.9,
+                reviewCount: 120,
+                soldThisWeek: 88,
+                tags: ["audio", "premium"],
+              },
+              category: {
+                slug: "electronics",
+                name: "Electronics",
+              },
+              variants: [],
             },
-            category: {
-              slug: "electronics",
-              name: "Electronics",
-            },
-            variants: [],
-          },
-        ],
-      }),
-    });
+          ],
+        }),
+      ),
+    );
 
     const products = await fetchProducts();
 

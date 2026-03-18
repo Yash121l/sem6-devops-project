@@ -23,6 +23,7 @@ export function WishlistPage() {
   const handleAddToCart = (item) => {
     addItem({
       id: item.id,
+      slug: item.slug,
       name: item.name,
       price: item.price,
       image: item.image,
@@ -70,7 +71,7 @@ export function WishlistPage() {
         {items.map((item) => (
           <Card key={item.id} className="overflow-hidden">
             <div className="aspect-square relative">
-              <Link to={`/product/${item.id}`}>
+              <Link to={`/product/${item.slug || item.id}`}>
                 <img
                   src={item.image}
                   alt={item.name}
@@ -86,7 +87,7 @@ export function WishlistPage() {
               </button>
             </div>
             <div className="p-4">
-              <Link to={`/product/${item.id}`}>
+              <Link to={`/product/${item.slug || item.id}`}>
                 <h3 className="font-medium line-clamp-2 hover:text-primary transition-colors">
                   {item.name}
                 </h3>

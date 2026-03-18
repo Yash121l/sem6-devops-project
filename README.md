@@ -49,9 +49,9 @@ npm test --prefix server
 
 ## Test Layers
 
-- Frontend unit tests: `client/src/lib/storefront.unit.test.js`
-- Frontend integration tests: `client/src/App.integration.test.jsx`
-- Frontend E2E tests: `client/e2e/storefront.spec.js`
+- Frontend unit tests: `client/src/lib/storefront.unit.test.js` using MSW node handlers
+- Frontend integration tests: `client/src/App.integration.test.jsx` using MSW node handlers
+- Frontend E2E tests: `client/e2e/storefront.spec.js` using the MSW browser worker
 - Backend unit tests: `server/test/unit/categories.service.spec.ts`
 - Backend integration tests: `server/test/integration/categories.controller.spec.ts`
 

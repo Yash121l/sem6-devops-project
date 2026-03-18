@@ -1,19 +1,16 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
+import { http, HttpResponse } from "msw";
 import App from "./App";
+import { server } from "@/mocks/server";
 
 describe("App", () => {
-  beforeEach(() => {
-    vi.spyOn(globalThis, "fetch").mockRejectedValue(
-      new Error("API unavailable"),
-    );
-  });
-
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
-
   it("renders the fallback storefront and updates cart state from the home page", async () => {
+    server.use(
+      http.get("/api/v1/categories", () => HttpResponse.error()),
+      http.get("/api/v1/products", () => HttpResponse.error()),
+    );
+
     render(<App />);
 
     expect(
