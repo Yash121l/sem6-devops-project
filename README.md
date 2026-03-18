@@ -22,6 +22,7 @@ Full-stack e-commerce coursework project with a React storefront, NestJS backend
 - Dependabot configuration
 - GitHub Actions to EC2 deployment workflow
 - Idempotent automation scripts
+- Husky pre-commit automation with `lint-staged`
 - Written explanations for architecture, workflow, design decisions, and deployment
 
 ## Quick Start

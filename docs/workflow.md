@@ -10,6 +10,11 @@
 
 Use `./scripts/checks.sh` before pushing changes. The script is idempotent and can be run repeatedly.
 
+Local git safety net:
+
+- Husky runs `.husky/pre-commit`
+- `lint-staged` formats and lints only staged files before a commit is created
+
 Frontend tests do not require a running backend. API calls are mocked through MSW:
 
 - Vitest uses `msw/node`

@@ -1,0 +1,12 @@
+{
+  "*.{md,yml,yaml,json}": ["prettier --write"],
+  "client/**/*.{css,html}": ["prettier --write"],
+  "client/**/*.{js,jsx}": [
+    "prettier --write",
+    "npm exec --prefix client eslint -- --fix"
+  ],
+  "server/**/*.ts": [
+    "prettier --write",
+    "npm exec --prefix server eslint -- --fix"
+  ]
+}
