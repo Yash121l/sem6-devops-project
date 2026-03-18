@@ -5,15 +5,15 @@
 
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { 
-  ChevronRight, 
-  Minus, 
-  Plus, 
-  Trash2, 
+import {
+  ChevronRight,
+  Minus,
+  Plus,
+  Trash2,
   ShoppingBag,
   Tag,
   Truck,
-  ArrowRight
+  ArrowRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,7 +22,7 @@ import { Card } from "@/components/ui/card";
 import { ProductCard } from "@/components/product/ProductCard";
 import { useCart } from "@/context/CartContext";
 import { products } from "@/data/products";
-import { cn, formatPrice } from "@/lib/utils";
+import { formatPrice } from "@/lib/utils";
 
 /**
  * Free shipping progress bar
@@ -38,8 +38,11 @@ function FreeShippingProgress({ current, threshold }) {
           <div className="flex items-center gap-2 mb-2">
             <Truck className="h-5 w-5 text-primary" />
             <p className="text-sm">
-              Add <span className="font-semibold text-primary">{formatPrice(remaining)}</span> more for{" "}
-              <span className="font-semibold">FREE shipping!</span>
+              Add{" "}
+              <span className="font-semibold text-primary">
+                {formatPrice(remaining)}
+              </span>{" "}
+              more for <span className="font-semibold">FREE shipping!</span>
             </p>
           </div>
           <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
@@ -52,7 +55,9 @@ function FreeShippingProgress({ current, threshold }) {
       ) : (
         <div className="flex items-center gap-2 text-success">
           <Truck className="h-5 w-5" />
-          <p className="text-sm font-medium">🎉 You've unlocked FREE shipping!</p>
+          <p className="text-sm font-medium">
+            🎉 You've unlocked FREE shipping!
+          </p>
         </div>
       )}
     </div>
@@ -74,11 +79,11 @@ function CartItem({ item }) {
           className="w-24 h-24 sm:w-32 sm:h-32 object-cover rounded-lg"
         />
       </Link>
-      
+
       <div className="flex-1 min-w-0">
         <div className="flex justify-between gap-4">
           <div>
-            <Link 
+            <Link
               to={`/product/${item.id}`}
               className="font-medium hover:text-primary line-clamp-2"
             >
@@ -92,13 +97,22 @@ function CartItem({ item }) {
               </p>
             )}
           </div>
-          <p className="font-semibold whitespace-nowrap">{formatPrice(item.price * item.quantity)}</p>
+          <p className="font-semibold whitespace-nowrap">
+            {formatPrice(item.price * item.quantity)}
+          </p>
         </div>
 
         <div className="flex items-center justify-between mt-4">
           <div className="flex items-center border rounded-md">
             <button
-              onClick={() => updateQuantity(item.id, item.quantity - 1, item.size, item.color)}
+              onClick={() =>
+                updateQuantity(
+                  item.id,
+                  item.quantity - 1,
+                  item.size,
+                  item.color,
+                )
+              }
               className="p-2 hover:bg-muted transition-colors"
               aria-label="Decrease quantity"
             >
@@ -108,7 +122,14 @@ function CartItem({ item }) {
               {item.quantity}
             </span>
             <button
-              onClick={() => updateQuantity(item.id, item.quantity + 1, item.size, item.color)}
+              onClick={() =>
+                updateQuantity(
+                  item.id,
+                  item.quantity + 1,
+                  item.size,
+                  item.color,
+                )
+              }
               className="p-2 hover:bg-muted transition-colors"
               aria-label="Increase quantity"
             >
@@ -172,9 +193,13 @@ function OrderSummary({ subtotal, hasFreeShipping }) {
             Apply
           </Button>
         </div>
-        {promoError && <p className="text-xs text-destructive mt-1">{promoError}</p>}
+        {promoError && (
+          <p className="text-xs text-destructive mt-1">{promoError}</p>
+        )}
         {promoApplied && (
-          <p className="text-xs text-success mt-1">Code applied! 10% discount</p>
+          <p className="text-xs text-success mt-1">
+            Code applied! 10% discount
+          </p>
         )}
       </div>
 
@@ -230,7 +255,8 @@ function OrderSummary({ subtotal, hasFreeShipping }) {
  * @returns {JSX.Element} Cart page
  */
 export function CartPage() {
-  const { items, subtotal, hasFreeShipping, freeShippingThreshold, clearCart } = useCart();
+  const { items, subtotal, hasFreeShipping, freeShippingThreshold, clearCart } =
+    useCart();
 
   // Get recommended products (random selection from products not in cart)
   const recommendedProducts = products
@@ -242,10 +268,12 @@ export function CartPage() {
       <div className="container-custom py-16">
         <div className="max-w-md mx-auto text-center">
           <ShoppingBag className="h-20 w-20 text-muted-foreground mx-auto mb-6" />
-          <h1 className="font-heading text-2xl font-bold mb-3">Your Cart is Empty</h1>
+          <h1 className="font-heading text-2xl font-bold mb-3">
+            Your Cart is Empty
+          </h1>
           <p className="text-muted-foreground mb-6">
-            Looks like you haven't added anything to your cart yet. 
-            Start shopping and find something you'll love!
+            Looks like you haven't added anything to your cart yet. Start
+            shopping and find something you'll love!
           </p>
           <Button size="lg" asChild>
             <Link to="/">Start Shopping</Link>
@@ -275,7 +303,9 @@ export function CartPage() {
       <div className="bg-muted py-4">
         <div className="container-custom">
           <nav className="flex items-center gap-2 text-sm">
-            <Link to="/" className="text-muted-foreground hover:text-primary">Home</Link>
+            <Link to="/" className="text-muted-foreground hover:text-primary">
+              Home
+            </Link>
             <ChevronRight className="h-4 w-4 text-muted-foreground" />
             <span className="font-medium">Shopping Cart</span>
           </nav>
@@ -285,43 +315,57 @@ export function CartPage() {
       <div className="container-custom py-8">
         <div className="flex items-center justify-between mb-6">
           <h1 className="font-heading text-2xl lg:text-3xl font-bold">
-            Shopping Cart ({items.length} {items.length === 1 ? "item" : "items"})
+            Shopping Cart ({items.length}{" "}
+            {items.length === 1 ? "item" : "items"})
           </h1>
-          <Button variant="ghost" className="text-destructive" onClick={clearCart}>
+          <Button
+            variant="ghost"
+            className="text-destructive"
+            onClick={clearCart}
+          >
             Clear Cart
           </Button>
         </div>
 
-        <FreeShippingProgress current={subtotal} threshold={freeShippingThreshold} />
+        <FreeShippingProgress
+          current={subtotal}
+          threshold={freeShippingThreshold}
+        />
 
         <div className="grid lg:grid-cols-3 gap-8 mt-8">
           {/* Cart items */}
           <div className="lg:col-span-2">
             <div className="divide-y">
               {items.map((item, index) => (
-                <CartItem key={`${item.id}-${item.size}-${item.color}-${index}`} item={item} />
+                <CartItem
+                  key={`${item.id}-${item.size}-${item.color}-${index}`}
+                  item={item}
+                />
               ))}
             </div>
 
             <div className="flex justify-between items-center mt-6 pt-6 border-t">
               <Button variant="outline" asChild>
-                <Link to="/">
-                  Continue Shopping
-                </Link>
+                <Link to="/">Continue Shopping</Link>
               </Button>
             </div>
           </div>
 
           {/* Order summary */}
           <div>
-            <OrderSummary subtotal={subtotal} hasFreeShipping={hasFreeShipping} />
+            <OrderSummary
+              subtotal={subtotal}
+              hasFreeShipping={hasFreeShipping}
+            />
           </div>
         </div>
 
         {/* You may also like */}
         {recommendedProducts.length > 0 && (
           <div className="mt-16">
-            <h2 className="font-heading text-2xl font-bold mb-6">You May Also Like</h2>
+            <h2 className="font-heading text-2xl font-bold mb-6">
+              You May Also Like
+            </h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-6">
               {recommendedProducts.map((product) => (
                 <ProductCard key={product.id} product={product} />

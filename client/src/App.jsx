@@ -38,10 +38,13 @@ function App() {
                 <Route path="wishlist" element={<WishlistPage />} />
                 <Route path="login" element={<LoginPage />} />
               </Route>
-              
+
               {/* Checkout flow (minimal layout) */}
               <Route path="/checkout" element={<CheckoutPage />} />
-              <Route path="/order-confirmation/:orderId" element={<OrderConfirmationPage />} />
+              <Route
+                path="/order-confirmation/:orderId"
+                element={<OrderConfirmationPage />}
+              />
             </Routes>
           </WishlistProvider>
         </CartProvider>

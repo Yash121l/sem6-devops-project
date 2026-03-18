@@ -19,7 +19,7 @@ import { useUser } from "@/context/UserContext";
  */
 export function LoginPage() {
   const navigate = useNavigate();
-  const { login } = useUser();
+  const { login, register } = useUser();
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -37,7 +37,10 @@ export function LoginPage() {
     setIsLoading(true);
 
     try {
-      const result = await login(formData.email, formData.password);
+      const result = isLogin
+        ? await login(formData.email, formData.password)
+        : await register(formData.name, formData.email, formData.password);
+
       if (result.success) {
         navigate("/");
       } else {
@@ -85,7 +88,9 @@ export function LoginPage() {
                   placeholder="John Doe"
                   className="pl-9"
                   value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
                   required={!isLogin}
                 />
               </div>
@@ -102,7 +107,9 @@ export function LoginPage() {
                 placeholder="you@example.com"
                 className="pl-9"
                 value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, email: e.target.value })
+                }
                 required
               />
             </div>
@@ -118,7 +125,9 @@ export function LoginPage() {
                 placeholder="••••••••"
                 className="pl-9 pr-10"
                 value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, password: e.target.value })
+                }
                 required
               />
               <button
@@ -126,7 +135,11 @@ export function LoginPage() {
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
               >
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
               </button>
             </div>
           </div>
@@ -143,8 +156,17 @@ export function LoginPage() {
             </div>
           )}
 
-          <Button type="submit" size="lg" className="w-full" disabled={isLoading}>
-            {isLoading ? "Please wait..." : isLogin ? "Sign In" : "Create Account"}
+          <Button
+            type="submit"
+            size="lg"
+            className="w-full"
+            disabled={isLoading}
+          >
+            {isLoading
+              ? "Please wait..."
+              : isLogin
+                ? "Sign In"
+                : "Create Account"}
           </Button>
         </form>
 

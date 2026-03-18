@@ -5,18 +5,18 @@
 
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { 
-  ChevronRight, 
-  Heart, 
-  ShoppingCart, 
-  Truck, 
-  RotateCcw, 
-  Shield, 
-  Minus, 
+import {
+  ChevronRight,
+  Heart,
+  ShoppingCart,
+  Truck,
+  RotateCcw,
+  Shield,
+  Minus,
   Plus,
   Check,
   Clock,
-  Users
+  Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -25,8 +25,12 @@ import { Rating } from "@/components/product/Rating";
 import { ProductCard } from "@/components/product/ProductCard";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
-import { getProductBySlug, products } from "@/data/products";
 import { getReviewsByProductId } from "@/data/reviews";
+import {
+  useStorefrontProduct,
+  useStorefrontProducts,
+} from "@/hooks/useStorefront";
+import { getFallbackProductBySlug } from "@/lib/storefront";
 import { cn, formatPrice } from "@/lib/utils";
 
 /**
@@ -45,7 +49,7 @@ function ProductGallery({ images, productName }) {
           className="w-full h-full object-cover"
         />
       </div>
-      
+
       {/* Thumbnails */}
       {images.length > 1 && (
         <div className="flex gap-3">
@@ -57,7 +61,7 @@ function ProductGallery({ images, productName }) {
                 "w-20 h-20 rounded-lg overflow-hidden border-2 transition-all",
                 selectedIndex === index
                   ? "border-primary"
-                  : "border-transparent hover:border-gray-300"
+                  : "border-transparent hover:border-gray-300",
               )}
             >
               <img
@@ -90,7 +94,9 @@ function StockIndicator({ stock }) {
     return (
       <div className="flex items-center gap-2 text-destructive animate-pulse-slow">
         <Clock className="h-4 w-4" />
-        <span className="font-medium">Only {stock} left in stock - order soon!</span>
+        <span className="font-medium">
+          Only {stock} left in stock - order soon!
+        </span>
       </div>
     );
   }
@@ -112,7 +118,9 @@ function SocialProofBadge({ soldThisWeek }) {
   return (
     <div className="inline-flex items-center gap-2 bg-amber-50 text-amber-700 px-3 py-1.5 rounded-full text-sm">
       <Users className="h-4 w-4" />
-      <span className="font-medium">{soldThisWeek.toLocaleString()} bought this week</span>
+      <span className="font-medium">
+        {soldThisWeek.toLocaleString()} bought this week
+      </span>
     </div>
   );
 }
@@ -133,16 +141,28 @@ function ReviewCard({ review }) {
           <div className="flex items-center gap-2 mb-1">
             <span className="font-medium">{review.userName}</span>
             {review.verified && (
-              <Badge variant="secondary" className="text-xs">Verified Purchase</Badge>
+              <Badge variant="secondary" className="text-xs">
+                Verified Purchase
+              </Badge>
             )}
           </div>
-          <Rating rating={review.rating} showCount={false} size="sm" className="mb-2" />
+          <Rating
+            rating={review.rating}
+            showCount={false}
+            size="sm"
+            className="mb-2"
+          />
           <h4 className="font-medium mb-1">{review.title}</h4>
           <p className="text-sm text-muted-foreground">{review.content}</p>
           {review.images?.length > 0 && (
             <div className="flex gap-2 mt-3">
               {review.images.map((img, i) => (
-                <img key={i} src={img} alt="Review" className="w-16 h-16 rounded object-cover" />
+                <img
+                  key={i}
+                  src={img}
+                  alt="Review"
+                  className="w-16 h-16 rounded object-cover"
+                />
               ))}
             </div>
           )}
@@ -164,9 +184,15 @@ function ReviewCard({ review }) {
  */
 export function ProductPage() {
   const { productSlug } = useParams();
-  const product = getProductBySlug(productSlug);
-  const reviews = product ? getReviewsByProductId(product.id) : [];
-  
+  const { data: product } = useStorefrontProduct(productSlug);
+  const fallbackProduct = getFallbackProductBySlug(productSlug);
+  const { data: relatedCatalogProducts } = useStorefrontProducts({
+    categoryId: product?.category,
+  });
+  const reviews = fallbackProduct
+    ? getReviewsByProductId(fallbackProduct.id)
+    : [];
+
   const [selectedSize, setSelectedSize] = useState(null);
   const [selectedColor, setSelectedColor] = useState(null);
   const [quantity, setQuantity] = useState(1);
@@ -188,7 +214,9 @@ export function ProductPage() {
     return (
       <div className="container-custom py-16 text-center">
         <h1 className="text-2xl font-bold mb-4">Product Not Found</h1>
-        <p className="text-muted-foreground mb-6">The product you're looking for doesn't exist.</p>
+        <p className="text-muted-foreground mb-6">
+          The product you're looking for doesn't exist.
+        </p>
         <Button asChild>
           <Link to="/">Return Home</Link>
         </Button>
@@ -221,8 +249,8 @@ export function ProductPage() {
   };
 
   // Get related products (same category, excluding current)
-  const relatedProducts = products
-    .filter((p) => p.category === product.category && p.id !== product.id)
+  const relatedProducts = relatedCatalogProducts
+    .filter((relatedProduct) => relatedProduct.slug !== product.slug)
     .slice(0, 4);
 
   return (
@@ -231,13 +259,20 @@ export function ProductPage() {
       <div className="bg-muted py-4">
         <div className="container-custom">
           <nav className="flex items-center gap-2 text-sm">
-            <Link to="/" className="text-muted-foreground hover:text-primary">Home</Link>
+            <Link to="/" className="text-muted-foreground hover:text-primary">
+              Home
+            </Link>
             <ChevronRight className="h-4 w-4 text-muted-foreground" />
-            <Link to={`/category/${product.category}`} className="text-muted-foreground hover:text-primary">
+            <Link
+              to={`/category/${product.category}`}
+              className="text-muted-foreground hover:text-primary"
+            >
               {product.categoryName}
             </Link>
             <ChevronRight className="h-4 w-4 text-muted-foreground" />
-            <span className="font-medium truncate max-w-[200px]">{product.name}</span>
+            <span className="font-medium truncate max-w-[200px]">
+              {product.name}
+            </span>
           </nav>
         </div>
       </div>
@@ -252,20 +287,34 @@ export function ProductPage() {
             {/* Badges */}
             <div className="flex flex-wrap gap-2">
               {product.isNew && <Badge variant="new">New Arrival</Badge>}
-              {product.isBestseller && <Badge variant="bestseller">Bestseller</Badge>}
-              {product.discount > 0 && <Badge variant="sale">-{product.discount}% OFF</Badge>}
+              {product.isBestseller && (
+                <Badge variant="bestseller">Bestseller</Badge>
+              )}
+              {product.discount > 0 && (
+                <Badge variant="sale">-{product.discount}% OFF</Badge>
+              )}
             </div>
 
             {/* Title */}
             <div>
-              <h1 className="font-heading text-2xl lg:text-3xl font-bold">{product.name}</h1>
-              <p className="text-muted-foreground mt-2">{product.description}</p>
+              <h1 className="font-heading text-2xl lg:text-3xl font-bold">
+                {product.name}
+              </h1>
+              <p className="text-muted-foreground mt-2">
+                {product.description}
+              </p>
             </div>
 
             {/* Rating */}
             <div className="flex items-center gap-4">
-              <Rating rating={product.rating} reviewCount={product.reviewCount} />
-              <a href="#reviews" className="text-sm text-primary hover:underline">
+              <Rating
+                rating={product.rating}
+                reviewCount={product.reviewCount}
+              />
+              <a
+                href="#reviews"
+                className="text-sm text-primary hover:underline"
+              >
                 Read reviews
               </a>
             </div>
@@ -275,13 +324,17 @@ export function ProductPage() {
 
             {/* Price */}
             <div className="flex items-baseline gap-3">
-              <span className="text-3xl font-bold">{formatPrice(product.price)}</span>
+              <span className="text-3xl font-bold">
+                {formatPrice(product.price)}
+              </span>
               {product.originalPrice && (
                 <>
                   <span className="text-xl text-muted-foreground line-through">
                     {formatPrice(product.originalPrice)}
                   </span>
-                  <Badge variant="sale">Save {formatPrice(product.originalPrice - product.price)}</Badge>
+                  <Badge variant="sale">
+                    Save {formatPrice(product.originalPrice - product.price)}
+                  </Badge>
                 </>
               )}
             </div>
@@ -292,7 +345,8 @@ export function ProductPage() {
             {product.colors?.length > 0 && (
               <div>
                 <label className="block text-sm font-medium mb-2">
-                  Color: <span className="text-muted-foreground">{selectedColor}</span>
+                  Color:{" "}
+                  <span className="text-muted-foreground">{selectedColor}</span>
                 </label>
                 <div className="flex gap-2">
                   {product.colors.map((color) => (
@@ -303,7 +357,7 @@ export function ProductPage() {
                         "w-10 h-10 rounded-full border-2 transition-all",
                         selectedColor === color.name
                           ? "border-primary ring-2 ring-primary/20"
-                          : "border-gray-200 hover:border-gray-400"
+                          : "border-gray-200 hover:border-gray-400",
                       )}
                       style={{ backgroundColor: color.hex }}
                       title={color.name}
@@ -326,7 +380,7 @@ export function ProductPage() {
                         "min-w-[48px] h-10 px-3 rounded-md border font-medium transition-all",
                         selectedSize === size
                           ? "bg-primary text-primary-foreground border-primary"
-                          : "hover:border-primary"
+                          : "hover:border-primary",
                       )}
                     >
                       {size}
@@ -347,9 +401,13 @@ export function ProductPage() {
                 >
                   <Minus className="h-4 w-4" />
                 </button>
-                <span className="px-4 min-w-[3rem] text-center font-medium">{quantity}</span>
+                <span className="px-4 min-w-[3rem] text-center font-medium">
+                  {quantity}
+                </span>
                 <button
-                  onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
+                  onClick={() =>
+                    setQuantity(Math.min(product.stock, quantity + 1))
+                  }
                   className="p-3 hover:bg-muted transition-colors"
                   aria-label="Increase quantity"
                 >
@@ -374,7 +432,12 @@ export function ProductPage() {
                 variant="outline"
                 onClick={handleToggleWishlist}
               >
-                <Heart className={cn("h-5 w-5", inWishlist && "fill-red-500 text-red-500")} />
+                <Heart
+                  className={cn(
+                    "h-5 w-5",
+                    inWishlist && "fill-red-500 text-red-500",
+                  )}
+                />
               </Button>
             </div>
 
@@ -412,7 +475,7 @@ export function ProductPage() {
                   "pb-3 text-sm font-medium border-b-2 transition-colors",
                   activeTab === "description"
                     ? "border-primary text-primary"
-                    : "border-transparent text-muted-foreground hover:text-foreground"
+                    : "border-transparent text-muted-foreground hover:text-foreground",
                 )}
               >
                 Description
@@ -424,7 +487,7 @@ export function ProductPage() {
                   "pb-3 text-sm font-medium border-b-2 transition-colors",
                   activeTab === "reviews"
                     ? "border-primary text-primary"
-                    : "border-transparent text-muted-foreground hover:text-foreground"
+                    : "border-transparent text-muted-foreground hover:text-foreground",
                 )}
               >
                 Reviews ({product.reviewCount})
@@ -446,7 +509,9 @@ export function ProductPage() {
                     <ReviewCard key={review.id} review={review} />
                   ))
                 ) : (
-                  <p className="text-muted-foreground">No reviews yet. Be the first to review this product!</p>
+                  <p className="text-muted-foreground">
+                    No reviews yet. Be the first to review this product!
+                  </p>
                 )}
               </div>
             )}
@@ -456,7 +521,9 @@ export function ProductPage() {
         {/* Related Products */}
         {relatedProducts.length > 0 && (
           <div className="mt-12">
-            <h2 className="font-heading text-2xl font-bold mb-6">You May Also Like</h2>
+            <h2 className="font-heading text-2xl font-bold mb-6">
+              You May Also Like
+            </h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-6">
               {relatedProducts.map((p) => (
                 <ProductCard key={p.id} product={p} />

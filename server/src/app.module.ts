@@ -22,56 +22,56 @@ import { AuditModule } from '@modules/audit/audit.module';
 import { HealthModule } from '@modules/health/health.module';
 
 @Module({
-    imports: [
-        // Configuration
-        ConfigModule.forRoot({
-            isGlobal: true,
-            validationSchema,
-            validationOptions: {
-                abortEarly: true,
-            },
-        }),
+  imports: [
+    // Configuration
+    ConfigModule.forRoot({
+      isGlobal: true,
+      validationSchema,
+      validationOptions: {
+        abortEarly: true,
+      },
+    }),
 
-        // Database
-        TypeOrmModule.forRootAsync({
-            imports: [ConfigModule],
-            inject: [ConfigService],
-            useFactory: getDatabaseConfig,
-        }),
+    // Database
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: getDatabaseConfig,
+    }),
 
-        // Rate limiting
-        ThrottlerModule.forRootAsync({
-            imports: [ConfigModule],
-            inject: [ConfigService],
-            useFactory: (configService: ConfigService) => ({
-                throttlers: [
-                    {
-                        name: 'default',
-                        ttl: configService.get<number>('RATE_LIMIT_TTL', 60) * 1000,
-                        limit: configService.get<number>('RATE_LIMIT_MAX', 100),
-                    },
-                ],
-            }),
-        }),
+    // Rate limiting
+    ThrottlerModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        throttlers: [
+          {
+            name: 'default',
+            ttl: configService.get<number>('RATE_LIMIT_TTL', 60) * 1000,
+            limit: configService.get<number>('RATE_LIMIT_MAX', 100),
+          },
+        ],
+      }),
+    }),
 
-        // Feature modules
-        AuthModule,
-        UsersModule,
-        CategoriesModule,
-        ProductsModule,
-        InventoryModule,
-        CartModule,
-        OrdersModule,
-        PaymentsModule,
-        CouponsModule,
-        AuditModule,
-        HealthModule,
-    ],
-    providers: [
-        {
-            provide: APP_GUARD,
-            useClass: ThrottlerGuard,
-        },
-    ],
+    // Feature modules
+    AuthModule,
+    UsersModule,
+    CategoriesModule,
+    ProductsModule,
+    InventoryModule,
+    CartModule,
+    OrdersModule,
+    PaymentsModule,
+    CouponsModule,
+    AuditModule,
+    HealthModule,
+  ],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
-export class AppModule { }
+export class AppModule {}

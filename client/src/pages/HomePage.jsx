@@ -8,8 +8,10 @@ import { Link } from "react-router-dom";
 import { ArrowRight, Truck, Shield, RotateCcw, Headphones } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/product/ProductCard";
-import { categories } from "@/data/categories";
-import { getBestsellers, getNewArrivals, getSaleProducts } from "@/data/products";
+import {
+  useStorefrontCategories,
+  useStorefrontProducts,
+} from "@/hooks/useStorefront";
 
 /**
  * Hero section with main value proposition
@@ -19,7 +21,7 @@ function HeroSection() {
     <section className="relative bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white overflow-hidden">
       {/* Background pattern */}
       <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTM2IDM0djItSDI0di0yaDEyek0zNiAyNHYySDI0di0yaDEyeiIvPjwvZz48L2c+PC9zdmc+')] opacity-50" />
-      
+
       <div className="container-custom relative z-10">
         <div className="grid lg:grid-cols-2 gap-12 items-center py-16 lg:py-24">
           <div className="space-y-6">
@@ -27,17 +29,16 @@ function HeroSection() {
               <span className="animate-pulse-slow">🔥</span>
               New Collection Available
             </div>
-            
+
             <h1 className="font-heading text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
-              Discover Your{" "}
-              <span className="text-primary">Perfect Style</span>
+              Discover Your <span className="text-primary">Perfect Style</span>
             </h1>
-            
+
             <p className="text-lg text-gray-300 max-w-lg">
-              Shop the latest trends with free shipping on orders over $75. 
+              Shop the latest trends with free shipping on orders over $75.
               Quality products, competitive prices, and exceptional service.
             </p>
-            
+
             <div className="flex flex-wrap gap-4">
               <Button size="xl" asChild>
                 <Link to="/category/clothing">
@@ -45,10 +46,13 @@ function HeroSection() {
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
-              <Button size="xl" variant="outline" className="text-white border-white hover:bg-white/10" asChild>
-                <Link to="/category/electronics">
-                  Explore Categories
-                </Link>
+              <Button
+                size="xl"
+                variant="outline"
+                className="text-white border-white hover:bg-white/10"
+                asChild
+              >
+                <Link to="/category/electronics">Explore Categories</Link>
               </Button>
             </div>
 
@@ -77,7 +81,7 @@ function HeroSection() {
                 alt="Fashion collection"
                 className="relative z-10 w-full h-full object-cover rounded-3xl shadow-2xl"
               />
-              
+
               {/* Floating badge */}
               <div className="absolute -bottom-4 -left-4 bg-white text-slate-900 p-4 rounded-xl shadow-xl z-20">
                 <p className="text-2xl font-bold text-primary">50K+</p>
@@ -126,14 +130,16 @@ function BenefitsBar() {
 /**
  * Categories grid section
  */
-function CategoriesSection() {
+function CategoriesSection({ categories }) {
   const featuredCategories = categories.slice(0, 6);
 
   return (
     <section className="py-12 lg:py-16">
       <div className="container-custom">
         <div className="text-center mb-10">
-          <h2 className="font-heading text-3xl font-bold mb-3">Shop by Category</h2>
+          <h2 className="font-heading text-3xl font-bold mb-3">
+            Shop by Category
+          </h2>
           <p className="text-muted-foreground max-w-xl mx-auto">
             Explore our wide range of products across various categories
           </p>
@@ -156,7 +162,9 @@ function CategoriesSection() {
                 <h3 className="font-heading text-lg lg:text-xl font-semibold text-white mb-1">
                   {category.name}
                 </h3>
-                <p className="text-sm text-gray-300">{category.productCount} products</p>
+                <p className="text-sm text-gray-300">
+                  {category.productCount} products
+                </p>
               </div>
             </Link>
           ))}
@@ -166,10 +174,38 @@ function CategoriesSection() {
   );
 }
 
+function ConnectionPill({ source, error }) {
+  const isLive = source === "api";
+
+  return (
+    <div className="container-custom pt-6">
+      <div
+        className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm ${
+          isLive
+            ? "bg-emerald-50 text-emerald-700"
+            : "bg-amber-50 text-amber-700"
+        }`}
+      >
+        <span
+          className={`h-2 w-2 rounded-full ${isLive ? "bg-emerald-500" : "bg-amber-500"}`}
+        />
+        {isLive ? "Live catalog connected" : "Using demo catalog fallback"}
+        {error ? <span className="hidden md:inline">({error})</span> : null}
+      </div>
+    </div>
+  );
+}
+
 /**
  * Product grid section (reusable for bestsellers, new arrivals, etc.)
  */
-function ProductSection({ title, subtitle, products, viewAllLink, viewAllText = "View All" }) {
+function ProductSection({
+  title,
+  subtitle,
+  products,
+  viewAllLink,
+  viewAllText = "View All",
+}) {
   return (
     <section className="py-12 lg:py-16">
       <div className="container-custom">
@@ -227,8 +263,12 @@ function TestimonialsSection() {
     <section className="py-12 lg:py-16 bg-muted">
       <div className="container-custom">
         <div className="text-center mb-10">
-          <h2 className="font-heading text-3xl font-bold mb-3">What Our Customers Say</h2>
-          <p className="text-muted-foreground">Join thousands of satisfied shoppers</p>
+          <h2 className="font-heading text-3xl font-bold mb-3">
+            What Our Customers Say
+          </h2>
+          <p className="text-muted-foreground">
+            Join thousands of satisfied shoppers
+          </p>
         </div>
 
         <div className="grid md:grid-cols-3 gap-6">
@@ -236,7 +276,11 @@ function TestimonialsSection() {
             <div key={index} className="bg-background p-6 rounded-xl shadow-sm">
               <div className="flex text-yellow-400 mb-4">
                 {[...Array(testimonial.rating)].map((_, i) => (
-                  <svg key={i} className="h-5 w-5 fill-current" viewBox="0 0 20 20">
+                  <svg
+                    key={i}
+                    className="h-5 w-5 fill-current"
+                    viewBox="0 0 20 20"
+                  >
                     <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
                   </svg>
                 ))}
@@ -296,15 +340,23 @@ function NewsletterSection() {
   return (
     <section className="py-12 lg:py-16 bg-primary text-primary-foreground">
       <div className="container-custom text-center">
-        <h2 className="font-heading text-3xl font-bold mb-3">Get 10% Off Your First Order</h2>
+        <h2 className="font-heading text-3xl font-bold mb-3">
+          Get 10% Off Your First Order
+        </h2>
         <p className="mb-6 max-w-xl mx-auto opacity-90">
-          Subscribe to our newsletter for exclusive deals, new arrivals, and insider-only discounts.
+          Subscribe to our newsletter for exclusive deals, new arrivals, and
+          insider-only discounts.
         </p>
-        
+
         {subscribed ? (
-          <p className="text-lg font-medium">🎉 Thanks for subscribing! Check your email for your discount code.</p>
+          <p className="text-lg font-medium">
+            🎉 Thanks for subscribing! Check your email for your discount code.
+          </p>
         ) : (
-          <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+          <form
+            onSubmit={handleSubmit}
+            className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto"
+          >
             <input
               type="email"
               placeholder="Enter your email"
@@ -328,15 +380,24 @@ function NewsletterSection() {
  * @returns {JSX.Element} Home page
  */
 export function HomePage() {
-  const bestsellers = getBestsellers(4);
-  const newArrivals = getNewArrivals(4);
-  const saleProducts = getSaleProducts(4);
+  const { data: categories } = useStorefrontCategories();
+  const { data: catalogProducts, source, error } = useStorefrontProducts();
+  const bestsellers = catalogProducts
+    .filter((product) => product.isBestseller)
+    .slice(0, 4);
+  const newArrivals = catalogProducts
+    .filter((product) => product.isNew)
+    .slice(0, 4);
+  const saleProducts = catalogProducts
+    .filter((product) => product.discount > 0)
+    .slice(0, 4);
 
   return (
     <>
+      <ConnectionPill source={source} error={error} />
       <HeroSection />
       <BenefitsBar />
-      <CategoriesSection />
+      <CategoriesSection categories={categories} />
       <ProductSection
         title="Best Sellers"
         subtitle="Our most popular products based on sales"

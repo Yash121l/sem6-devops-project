@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap");
 
 @import "tailwindcss";
 
@@ -28,18 +28,18 @@
   --color-border: oklch(92% 0.004 264.531);
   --color-input: oklch(92% 0.004 264.531);
   --color-ring: oklch(70% 0.18 45);
-  
+
   /* Radius */
   --radius: 0.5rem;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
-  
+
   /* Font families */
   --font-family-sans: "Inter", system-ui, sans-serif;
   --font-family-heading: "Poppins", system-ui, sans-serif;
-  
+
   /* Animations */
   --animate-accordion-down: accordion-down 0.2s ease-out;
   --animate-accordion-up: accordion-up 0.2s ease-out;
@@ -49,23 +49,41 @@
 }
 
 @keyframes accordion-down {
-  from { height: 0; }
-  to { height: var(--radix-accordion-content-height); }
+  from {
+    height: 0;
+  }
+  to {
+    height: var(--radix-accordion-content-height);
+  }
 }
 
 @keyframes accordion-up {
-  from { height: var(--radix-accordion-content-height); }
-  to { height: 0; }
+  from {
+    height: var(--radix-accordion-content-height);
+  }
+  to {
+    height: 0;
+  }
 }
 
 @keyframes fade-in {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes slide-in {
-  from { transform: translateX(100%); }
-  to { transform: translateX(0); }
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
 }
 
 /* Base styles */
@@ -81,7 +99,12 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: var(--font-family-heading);
   font-weight: 700;
   letter-spacing: -0.025em;
@@ -133,7 +156,9 @@ h1, h2, h3, h4, h5, h6 {
 /* Focus visible styles */
 :focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px var(--color-background), 0 0 0 4px var(--color-ring);
+  box-shadow:
+    0 0 0 2px var(--color-background),
+    0 0 0 4px var(--color-ring);
 }
 
 /* Page layout */

@@ -36,7 +36,9 @@ export function WishlistPage() {
       <div className="container-custom py-16">
         <div className="max-w-md mx-auto text-center">
           <HeartOff className="h-20 w-20 text-muted-foreground mx-auto mb-6" />
-          <h1 className="font-heading text-2xl font-bold mb-3">Your Wishlist is Empty</h1>
+          <h1 className="font-heading text-2xl font-bold mb-3">
+            Your Wishlist is Empty
+          </h1>
           <p className="text-muted-foreground mb-6">
             Save items you love by clicking the heart icon on any product.
           </p>
@@ -55,7 +57,11 @@ export function WishlistPage() {
           <Heart className="h-6 w-6 text-primary" />
           My Wishlist ({items.length} {items.length === 1 ? "item" : "items"})
         </h1>
-        <Button variant="ghost" className="text-destructive" onClick={clearWishlist}>
+        <Button
+          variant="ghost"
+          className="text-destructive"
+          onClick={clearWishlist}
+        >
           Clear All
         </Button>
       </div>
@@ -85,7 +91,9 @@ export function WishlistPage() {
                   {item.name}
                 </h3>
               </Link>
-              <p className="text-lg font-bold mt-2">{formatPrice(item.price)}</p>
+              <p className="text-lg font-bold mt-2">
+                {formatPrice(item.price)}
+              </p>
               <Button
                 className="w-full mt-4"
                 onClick={() => handleAddToCart(item)}

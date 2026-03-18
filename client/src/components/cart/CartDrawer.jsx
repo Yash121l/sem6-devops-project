@@ -7,7 +7,6 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { X, Plus, Minus, Trash2, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { useCart } from "@/context/CartContext";
 import { formatPrice } from "@/lib/utils";
 
@@ -26,8 +25,11 @@ function FreeShippingBar({ current, threshold }) {
       {remaining > 0 ? (
         <>
           <p className="text-sm mb-2">
-            Add <span className="font-semibold text-primary">{formatPrice(remaining)}</span> more for{" "}
-            <span className="font-semibold">FREE shipping!</span>
+            Add{" "}
+            <span className="font-semibold text-primary">
+              {formatPrice(remaining)}
+            </span>{" "}
+            more for <span className="font-semibold">FREE shipping!</span>
           </p>
           <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
             <div
@@ -70,19 +72,35 @@ function CartItemRow({ item }) {
           </p>
         )}
         <p className="text-sm font-semibold mt-1">{formatPrice(item.price)}</p>
-        
+
         <div className="flex items-center gap-2 mt-2">
           <div className="flex items-center border rounded-md">
             <button
-              onClick={() => updateQuantity(item.id, item.quantity - 1, item.size, item.color)}
+              onClick={() =>
+                updateQuantity(
+                  item.id,
+                  item.quantity - 1,
+                  item.size,
+                  item.color,
+                )
+              }
               className="p-1 hover:bg-muted transition-colors"
               aria-label="Decrease quantity"
             >
               <Minus className="h-4 w-4" />
             </button>
-            <span className="px-3 text-sm min-w-[2rem] text-center">{item.quantity}</span>
+            <span className="px-3 text-sm min-w-[2rem] text-center">
+              {item.quantity}
+            </span>
             <button
-              onClick={() => updateQuantity(item.id, item.quantity + 1, item.size, item.color)}
+              onClick={() =>
+                updateQuantity(
+                  item.id,
+                  item.quantity + 1,
+                  item.size,
+                  item.color,
+                )
+              }
               className="p-1 hover:bg-muted transition-colors"
               aria-label="Increase quantity"
             >
@@ -107,7 +125,14 @@ function CartItemRow({ item }) {
  * @returns {JSX.Element} Cart drawer
  */
 export function CartDrawer() {
-  const { items, isOpen, toggleCart, subtotal, freeShippingThreshold, itemCount } = useCart();
+  const {
+    items,
+    isOpen,
+    toggleCart,
+    subtotal,
+    freeShippingThreshold,
+    itemCount,
+  } = useCart();
 
   if (!isOpen) return null;
 
@@ -148,10 +173,16 @@ export function CartDrawer() {
             </div>
           ) : (
             <>
-              <FreeShippingBar current={subtotal} threshold={freeShippingThreshold} />
+              <FreeShippingBar
+                current={subtotal}
+                threshold={freeShippingThreshold}
+              />
               <div className="divide-y mt-4">
                 {items.map((item, index) => (
-                  <CartItemRow key={`${item.id}-${item.size}-${item.color}-${index}`} item={item} />
+                  <CartItemRow
+                    key={`${item.id}-${item.size}-${item.color}-${index}`}
+                    item={item}
+                  />
                 ))}
               </div>
             </>
@@ -172,7 +203,11 @@ export function CartDrawer() {
               <Button size="lg" asChild onClick={() => toggleCart(false)}>
                 <Link to="/checkout">Proceed to Checkout</Link>
               </Button>
-              <Button variant="outline" onClick={() => toggleCart(false)} asChild>
+              <Button
+                variant="outline"
+                onClick={() => toggleCart(false)}
+                asChild
+              >
                 <Link to="/cart">View Cart</Link>
               </Button>
             </div>

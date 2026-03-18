@@ -1,11 +1,18 @@
 /**
  * @fileoverview User Context Provider
- * Manages user authentication state (mock implementation)
+ * Manages user authentication state with API-first auth and demo fallback
  */
 
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { loginWithApi, registerWithApi } from "@/lib/storefront";
+import {
+  loadStoredJson,
+  removeStoredValue,
+  saveStoredJson,
+} from "@/lib/storage";
 
 const USER_STORAGE_KEY = "shopsmart_user";
+const SESSION_STORAGE_KEY = "shopsmart_session";
 
 /**
  * @typedef {Object} User
@@ -24,73 +31,91 @@ const UserContext = createContext(null);
  */
 export function UserProvider({ children }) {
   const [user, setUser] = useState(null);
+  const [session, setSession] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [authSource, setAuthSource] = useState("demo");
 
   // Load user from localStorage on mount
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(USER_STORAGE_KEY);
-      if (saved) {
-        setUser(JSON.parse(saved));
-      }
-    } catch (error) {
-      console.error("Error loading user:", error);
-    } finally {
-      setIsLoading(false);
-    }
+    setUser(loadStoredJson(USER_STORAGE_KEY, null));
+    setSession(loadStoredJson(SESSION_STORAGE_KEY, null));
+    setIsLoading(false);
   }, []);
 
+  const persistSession = (nextUser, nextSession, source) => {
+    setUser(nextUser);
+    setSession(nextSession);
+    setAuthSource(source);
+    saveStoredJson(USER_STORAGE_KEY, nextUser);
+    saveStoredJson(SESSION_STORAGE_KEY, nextSession);
+  };
+
+  const createDemoUser = (name, email) => ({
+    id: `demo_${Date.now()}`,
+    name: name || email.split("@")[0],
+    email,
+    avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`,
+  });
+
   /**
-   * Mock login function
+   * Login function
    * @param {string} email - User email
    * @param {string} password - User password
    * @returns {Promise<{success: boolean, error?: string}>}
    */
   const login = async (email, password) => {
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    
-    // Mock validation
     if (!email || !password) {
       return { success: false, error: "Email and password are required" };
     }
 
-    const mockUser = {
-      id: "user_1",
-      name: email.split("@")[0],
-      email,
-      avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`,
-    };
-
-    setUser(mockUser);
-    localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(mockUser));
-    return { success: true };
+    try {
+      const result = await loginWithApi(email, password);
+      persistSession(
+        result.user,
+        {
+          accessToken: result.accessToken,
+          refreshToken: result.refreshToken,
+          expiresIn: result.expiresIn,
+        },
+        "api",
+      );
+      return { success: true, source: "api" };
+    } catch (error) {
+      const demoUser = createDemoUser("", email);
+      persistSession(demoUser, null, "demo");
+      return { success: true, source: "demo", warning: error.message };
+    }
   };
 
   /**
-   * Mock register function
+   * Register function
    * @param {string} name - User name
    * @param {string} email - User email
    * @param {string} password - User password
    * @returns {Promise<{success: boolean, error?: string}>}
    */
   const register = async (name, email, password) => {
-    await new Promise((resolve) => setTimeout(resolve, 500));
-
     if (!name || !email || !password) {
       return { success: false, error: "All fields are required" };
     }
 
-    const mockUser = {
-      id: `user_${Date.now()}`,
-      name,
-      email,
-      avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`,
-    };
-
-    setUser(mockUser);
-    localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(mockUser));
-    return { success: true };
+    try {
+      const result = await registerWithApi(name, email, password);
+      persistSession(
+        result.user,
+        {
+          accessToken: result.accessToken,
+          refreshToken: result.refreshToken,
+          expiresIn: result.expiresIn,
+        },
+        "api",
+      );
+      return { success: true, source: "api" };
+    } catch (error) {
+      const demoUser = createDemoUser(name, email);
+      persistSession(demoUser, null, "demo");
+      return { success: true, source: "demo", warning: error.message };
+    }
   };
 
   /**
@@ -98,13 +123,18 @@ export function UserProvider({ children }) {
    */
   const logout = () => {
     setUser(null);
-    localStorage.removeItem(USER_STORAGE_KEY);
+    setSession(null);
+    setAuthSource("demo");
+    removeStoredValue(USER_STORAGE_KEY);
+    removeStoredValue(SESSION_STORAGE_KEY);
   };
 
   const value = {
     user,
+    session,
     isAuthenticated: !!user,
     isLoading,
+    authSource,
     login,
     register,
     logout,

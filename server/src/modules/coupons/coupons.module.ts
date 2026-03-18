@@ -7,18 +7,18 @@ import { CouponsService } from './coupons.service';
 import { Coupon } from './entities/coupon.entity';
 
 @Module({
-    imports: [
-        TypeOrmModule.forFeature([Coupon]),
-        JwtModule.registerAsync({
-            imports: [ConfigModule],
-            inject: [ConfigService],
-            useFactory: (configService: ConfigService) => ({
-                secret: configService.get<string>('JWT_SECRET'),
-            }),
-        }),
-    ],
-    controllers: [CouponsController],
-    providers: [CouponsService],
-    exports: [CouponsService],
+  imports: [
+    TypeOrmModule.forFeature([Coupon]),
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        secret: configService.get<string>('JWT_SECRET'),
+      }),
+    }),
+  ],
+  controllers: [CouponsController],
+  providers: [CouponsService],
+  exports: [CouponsService],
 })
-export class CouponsModule { }
+export class CouponsModule {}

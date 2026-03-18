@@ -4,6 +4,7 @@
  */
 
 import React, { createContext, useContext, useReducer, useEffect } from "react";
+import { loadStoredJson, saveStoredJson } from "@/lib/storage";
 
 const WISHLIST_STORAGE_KEY = "shopsmart_wishlist";
 
@@ -77,23 +78,18 @@ export function WishlistProvider({ children }) {
 
   // Load from localStorage
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(WISHLIST_STORAGE_KEY);
-      if (saved) {
-        dispatch({ type: WishlistActionTypes.LOAD_WISHLIST, payload: JSON.parse(saved) });
-      }
-    } catch (error) {
-      console.error("Error loading wishlist:", error);
+    const savedWishlist = loadStoredJson(WISHLIST_STORAGE_KEY, []);
+    if (savedWishlist.length > 0) {
+      dispatch({
+        type: WishlistActionTypes.LOAD_WISHLIST,
+        payload: savedWishlist,
+      });
     }
   }, []);
 
   // Save to localStorage
   useEffect(() => {
-    try {
-      localStorage.setItem(WISHLIST_STORAGE_KEY, JSON.stringify(state.items));
-    } catch (error) {
-      console.error("Error saving wishlist:", error);
-    }
+    saveStoredJson(WISHLIST_STORAGE_KEY, state.items);
   }, [state.items]);
 
   /**
@@ -150,7 +146,11 @@ export function WishlistProvider({ children }) {
     clearWishlist,
   };
 
-  return <WishlistContext.Provider value={value}>{children}</WishlistContext.Provider>;
+  return (
+    <WishlistContext.Provider value={value}>
+      {children}
+    </WishlistContext.Provider>
+  );
 }
 
 /**

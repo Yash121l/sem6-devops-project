@@ -5,14 +5,14 @@
 
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { 
-  ChevronRight, 
+import {
+  ChevronRight,
   ChevronLeft,
-  Check, 
-  CreditCard, 
-  Truck, 
+  Check,
+  CreditCard,
+  Truck,
   ShieldCheck,
-  Lock
+  Lock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,7 +20,6 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useCart } from "@/context/CartContext";
-import { useUser } from "@/context/UserContext";
 import { cn, formatPrice } from "@/lib/utils";
 
 /**
@@ -44,8 +43,8 @@ function CheckoutStepper({ currentStep }) {
                 currentStep > step.id
                   ? "bg-success text-white"
                   : currentStep === step.id
-                  ? "bg-primary text-white"
-                  : "bg-muted text-muted-foreground"
+                    ? "bg-primary text-white"
+                    : "bg-muted text-muted-foreground",
               )}
             >
               {currentStep > step.id ? <Check className="h-5 w-5" /> : step.id}
@@ -53,7 +52,9 @@ function CheckoutStepper({ currentStep }) {
             <span
               className={cn(
                 "ml-2 text-sm font-medium hidden sm:inline",
-                currentStep >= step.id ? "text-foreground" : "text-muted-foreground"
+                currentStep >= step.id
+                  ? "text-foreground"
+                  : "text-muted-foreground",
               )}
             >
               {step.name}
@@ -63,7 +64,7 @@ function CheckoutStepper({ currentStep }) {
             <div
               className={cn(
                 "w-12 sm:w-24 h-1 mx-2 sm:mx-4",
-                currentStep > step.id ? "bg-success" : "bg-muted"
+                currentStep > step.id ? "bg-success" : "bg-muted",
               )}
             />
           )}
@@ -84,7 +85,7 @@ function OrderSummarySidebar({ items, subtotal, hasFreeShipping }) {
   return (
     <Card className="p-6">
       <h3 className="font-semibold mb-4">Order Summary</h3>
-      
+
       {/* Items preview */}
       <div className="space-y-3 max-h-48 overflow-y-auto">
         {items.map((item, index) => (
@@ -96,9 +97,13 @@ function OrderSummarySidebar({ items, subtotal, hasFreeShipping }) {
             />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium truncate">{item.name}</p>
-              <p className="text-xs text-muted-foreground">Qty: {item.quantity}</p>
+              <p className="text-xs text-muted-foreground">
+                Qty: {item.quantity}
+              </p>
             </div>
-            <p className="text-sm font-medium">{formatPrice(item.price * item.quantity)}</p>
+            <p className="text-sm font-medium">
+              {formatPrice(item.price * item.quantity)}
+            </p>
           </div>
         ))}
       </div>
@@ -164,7 +169,9 @@ function ShippingStep({ formData, setFormData, onNext }) {
           <Input
             id="firstName"
             value={formData.firstName}
-            onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+            onChange={(e) =>
+              setFormData({ ...formData, firstName: e.target.value })
+            }
             required
           />
         </div>
@@ -173,7 +180,9 @@ function ShippingStep({ formData, setFormData, onNext }) {
           <Input
             id="lastName"
             value={formData.lastName}
-            onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+            onChange={(e) =>
+              setFormData({ ...formData, lastName: e.target.value })
+            }
             required
           />
         </div>
@@ -205,7 +214,9 @@ function ShippingStep({ formData, setFormData, onNext }) {
         <Input
           id="address"
           value={formData.address}
-          onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+          onChange={(e) =>
+            setFormData({ ...formData, address: e.target.value })
+          }
           required
         />
       </div>
@@ -225,7 +236,9 @@ function ShippingStep({ formData, setFormData, onNext }) {
           <Input
             id="state"
             value={formData.state}
-            onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+            onChange={(e) =>
+              setFormData({ ...formData, state: e.target.value })
+            }
             required
           />
         </div>
@@ -250,7 +263,9 @@ function ShippingStep({ formData, setFormData, onNext }) {
               name="shipping"
               value="standard"
               checked={formData.shippingMethod === "standard"}
-              onChange={(e) => setFormData({ ...formData, shippingMethod: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, shippingMethod: e.target.value })
+              }
               className="text-primary"
             />
             <div className="flex-1">
@@ -265,7 +280,9 @@ function ShippingStep({ formData, setFormData, onNext }) {
               name="shipping"
               value="express"
               checked={formData.shippingMethod === "express"}
-              onChange={(e) => setFormData({ ...formData, shippingMethod: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, shippingMethod: e.target.value })
+              }
               className="text-primary"
             />
             <div className="flex-1">
@@ -324,7 +341,9 @@ function PaymentStep({ formData, setFormData, onNext, onBack }) {
               id="cardNumber"
               placeholder="1234 5678 9012 3456"
               value={formData.cardNumber}
-              onChange={(e) => setFormData({ ...formData, cardNumber: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, cardNumber: e.target.value })
+              }
               required
             />
           </div>
@@ -334,7 +353,9 @@ function PaymentStep({ formData, setFormData, onNext, onBack }) {
             <Input
               id="cardName"
               value={formData.cardName}
-              onChange={(e) => setFormData({ ...formData, cardName: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, cardName: e.target.value })
+              }
               required
             />
           </div>
@@ -346,7 +367,9 @@ function PaymentStep({ formData, setFormData, onNext, onBack }) {
                 id="expiry"
                 placeholder="MM/YY"
                 value={formData.expiry}
-                onChange={(e) => setFormData({ ...formData, expiry: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, expiry: e.target.value })
+                }
                 required
               />
             </div>
@@ -356,7 +379,9 @@ function PaymentStep({ formData, setFormData, onNext, onBack }) {
                 id="cvv"
                 placeholder="123"
                 value={formData.cvv}
-                onChange={(e) => setFormData({ ...formData, cvv: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, cvv: e.target.value })
+                }
                 required
               />
             </div>
@@ -370,7 +395,9 @@ function PaymentStep({ formData, setFormData, onNext, onBack }) {
           <input
             type="checkbox"
             checked={formData.sameAsShipping}
-            onChange={(e) => setFormData({ ...formData, sameAsShipping: e.target.checked })}
+            onChange={(e) =>
+              setFormData({ ...formData, sameAsShipping: e.target.checked })
+            }
             className="rounded text-primary"
           />
           <span className="text-sm">Billing address same as shipping</span>
@@ -394,23 +421,35 @@ function PaymentStep({ formData, setFormData, onNext, onBack }) {
 /**
  * Review step
  */
-function ReviewStep({ formData, items, subtotal, hasFreeShipping, onBack, onComplete }) {
-  const shipping = formData.shippingMethod === "express" ? 14.99 : (hasFreeShipping ? 0 : 9.99);
+function ReviewStep({
+  formData,
+  items,
+  subtotal,
+  hasFreeShipping,
+  onBack,
+  onComplete,
+}) {
+  const shipping =
+    formData.shippingMethod === "express" ? 14.99 : hasFreeShipping ? 0 : 9.99;
   const tax = subtotal * 0.08;
   const total = subtotal + shipping + tax;
 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="font-heading text-xl font-bold mb-4">Review Your Order</h2>
+        <h2 className="font-heading text-xl font-bold mb-4">
+          Review Your Order
+        </h2>
       </div>
 
       {/* Shipping info */}
       <Card className="p-4">
         <h3 className="font-medium mb-2">Shipping Address</h3>
         <p className="text-muted-foreground text-sm">
-          {formData.firstName} {formData.lastName}<br />
-          {formData.address}<br />
+          {formData.firstName} {formData.lastName}
+          <br />
+          {formData.address}
+          <br />
           {formData.city}, {formData.state} {formData.zip}
         </p>
       </Card>
@@ -429,12 +468,20 @@ function ReviewStep({ formData, items, subtotal, hasFreeShipping, onBack, onComp
         <div className="space-y-3">
           {items.map((item, index) => (
             <div key={index} className="flex gap-3">
-              <img src={item.image} alt={item.name} className="w-16 h-16 rounded object-cover" />
+              <img
+                src={item.image}
+                alt={item.name}
+                className="w-16 h-16 rounded object-cover"
+              />
               <div className="flex-1">
                 <p className="font-medium">{item.name}</p>
-                <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
+                <p className="text-sm text-muted-foreground">
+                  Qty: {item.quantity}
+                </p>
               </div>
-              <p className="font-medium">{formatPrice(item.price * item.quantity)}</p>
+              <p className="font-medium">
+                {formatPrice(item.price * item.quantity)}
+              </p>
             </div>
           ))}
         </div>
@@ -519,9 +566,16 @@ export function CheckoutPage() {
       <div className="bg-white border-b py-4">
         <div className="container-custom">
           <nav className="flex items-center gap-2 text-sm">
-            <Link to="/" className="text-muted-foreground hover:text-primary">Home</Link>
+            <Link to="/" className="text-muted-foreground hover:text-primary">
+              Home
+            </Link>
             <ChevronRight className="h-4 w-4 text-muted-foreground" />
-            <Link to="/cart" className="text-muted-foreground hover:text-primary">Cart</Link>
+            <Link
+              to="/cart"
+              className="text-muted-foreground hover:text-primary"
+            >
+              Cart
+            </Link>
             <ChevronRight className="h-4 w-4 text-muted-foreground" />
             <span className="font-medium">Checkout</span>
           </nav>
