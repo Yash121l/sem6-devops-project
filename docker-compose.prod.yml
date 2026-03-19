@@ -1,0 +1,97 @@
+version: '3.8'
+
+# Production deployment
+# Usage: docker compose -f docker-compose.prod.yml up -d
+# Requires: .env file with production secrets (see server/.env.example)
+# Frontend: http://localhost:80
+# Backend API: http://localhost:3000/api/v1
+
+services:
+  # ─── Frontend (nginx) ────────────────────────────────────────────────────────
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-/api/v1}
+    container_name: shopsmart-client-prod
+    ports:
+      - '80:80'
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - shopsmart-network
+    restart: unless-stopped
+
+  # ─── Backend API ────────────────────────────────────────────────────────────
+  api:
+    build:
+      context: ./server
+      dockerfile: docker/Dockerfile
+    container_name: shopsmart-api-prod
+    ports:
+      - '3000:3000'
+    env_file:
+      - ./server/.env
+    environment:
+      NODE_ENV: production
+      DATABASE_HOST: postgres
+      REDIS_HOST: redis
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - shopsmart-network
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'node', '-e', "require('http').get('http://localhost:3000/api/v1/health/liveness', (r) => process.exit(r.statusCode === 200 ? 0 : 1))"]
+      interval: 30s
+      timeout: 10s
+      start_period: 30s
+      retries: 3
+
+  # ─── PostgreSQL ──────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: shopsmart-postgres-prod
+    environment:
+      POSTGRES_USER: ${DATABASE_USER:-postgres}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:?DATABASE_PASSWORD must be set}
+      POSTGRES_DB: ${DATABASE_NAME:-ecommerce}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${DATABASE_USER:-postgres}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - shopsmart-network
+    restart: unless-stopped
+
+  # ─── Redis ───────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: shopsmart-redis-prod
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-} --maxmemory 512mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - shopsmart-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  shopsmart-network:
+    driver: bridge

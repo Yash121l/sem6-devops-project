@@ -21,8 +21,8 @@ export const getDatabaseConfig = (configService: ConfigService): TypeOrmModuleOp
     entities: [__dirname + '/../**/*.entity{.ts,.js}'],
     migrations: [__dirname + '/../database/migrations/*{.ts,.js}'],
 
-    // CRITICAL: Never synchronize in production - use migrations
-    synchronize: false,
+    // Auto-sync schema in development only; use migrations in production
+    synchronize: !isProduction,
 
     // Auto-run migrations on startup in production
     migrationsRun: isProduction,

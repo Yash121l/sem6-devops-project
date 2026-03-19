@@ -20,8 +20,8 @@ export const dataSourceOptions: DataSourceOptions = {
   entities: [__dirname + '/../**/*.entity{.ts,.js}'],
   migrations: [__dirname + '/migrations/*{.ts,.js}'],
 
-  // NEVER use synchronize in production - always use migrations
-  synchronize: false,
+  // Auto-sync schema in development only; use migrations in production
+  synchronize: !isProduction,
 
   // Auto-run migrations on application startup
   migrationsRun: isProduction,
