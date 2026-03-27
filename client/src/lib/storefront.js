@@ -2,10 +2,11 @@ import { categories as demoCategories } from "@/data/categories";
 import { products as demoProducts } from "@/data/products";
 import { calculateDiscount } from "@/lib/utils";
 
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "/api/v1").replace(
-  /\/$/,
-  "",
-);
+const API_BASE_URL = (
+  import.meta.env.VITE_API_BASE_URL ||
+  import.meta.env.VITE_API_URL ||
+  "/api/v1"
+).replace(/\/$/, "");
 const DEFAULT_CATEGORY_IMAGE =
   "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=600";
 const DEFAULT_PRODUCT_IMAGE =
