@@ -218,7 +218,7 @@ jobs:
         run: |
           set -euo pipefail
           IMAGE="${ECR_URL}:${GITHUB_SHA}"
-          docker build -t "${IMAGE}" -f server/docker/Dockerfile server
+          docker build -t "${IMAGE}" -f server/docker/Dockerfile .
           docker push "${IMAGE}"
 
       - name: Apply Kubernetes manifests

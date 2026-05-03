@@ -18,7 +18,7 @@ Full-stack e-commerce coursework project with a React storefront, NestJS backend
 - GitHub Actions on `push` and `pull_request` with **unit and integration tests** and **JUnit report artifacts** (Vitest + `jest-junit`)
 - **Terraform**: `fmt`, `init`, `validate`, `plan`; `apply` on `main` when remote state variables are configured
 - **S3**: globally unique bucket name, versioning, encryption, public access blocked
-- **Docker**: multi-stage production image for the API with non-root user and `HEALTHCHECK` ([`server/docker/Dockerfile`](server/docker/Dockerfile))
+- **Docker**: multi-stage image from repo root builds the **Vite client** and serves it from Nest on `/`; API stays under `/api/v1` on the same LoadBalancer URL ([`server/docker/Dockerfile`](server/docker/Dockerfile), [`.dockerignore`](.dockerignore))
 - **ECR** push and **EKS** rollout with **LoadBalancer** verification (`curl` to liveness)
 - **Kubernetes**: namespace `shopsmart`, 2 replicas, resource limits, liveness and readiness probes
 - Dependabot, PR template, contributing guide, Husky + `lint-staged`, and written docs

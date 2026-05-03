@@ -292,8 +292,11 @@ docker-compose up -d
 ```
 
 ### Production Build
+
+From the **repository root** (the Dockerfile bundles `client/dist` into the API image):
+
 ```bash
-docker build -f docker/Dockerfile -t ecommerce-api .
+docker build -f server/docker/Dockerfile -t ecommerce-api .
 ```
 
 ## 🔧 Configuration

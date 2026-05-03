@@ -1,4 +1,4 @@
-import { Controller, Get, VERSION_NEUTRAL } from '@nestjs/common';
+import { Controller, Get } from '@nestjs/common';
 import {
   HealthCheckService,
   HealthCheck,
@@ -12,8 +12,7 @@ import { SKIP_TRANSFORM_KEY } from '@common/interceptors/transform.interceptor';
 import { SetMetadata } from '@nestjs/common';
 
 @ApiTags('health')
-// URI versioning would register /api/v1/<version>/health/...; probes use /api/v1/health/...
-@Controller({ path: 'health', version: VERSION_NEUTRAL })
+@Controller('health')
 export class HealthController {
   constructor(
     private health: HealthCheckService,

@@ -1,7 +1,11 @@
+import { join } from 'path';
+import { existsSync } from 'fs';
+import * as express from 'express';
 import { NestFactory, Reflector } from '@nestjs/core';
-import { ValidationPipe, VersioningType, Logger } from '@nestjs/common';
+import { ValidationPipe, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from '@common/filters/http-exception.filter';
 import { TransformInterceptor } from '@common/interceptors/transform.interceptor';
@@ -11,12 +15,34 @@ import compression from 'compression';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
-  const app = await NestFactory.create(AppModule, {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     logger: ['error', 'warn', 'log', 'debug', 'verbose'],
   });
 
   const configService = app.get(ConfigService);
   const reflector = app.get(Reflector);
+
+  const publicDir = join(__dirname, '..', 'public');
+  const serveStorefront =
+    configService.get<string>('NODE_ENV') === 'production' &&
+    existsSync(join(publicDir, 'index.html'));
+
+  if (serveStorefront) {
+    // Register before other middleware so `/` and `/assets/*` are served; `/api/*` falls through to Nest.
+    app.use(express.static(publicDir));
+    app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
+      if (req.method !== 'GET' && req.method !== 'HEAD') {
+        next();
+        return;
+      }
+      if (req.path.startsWith('/api')) {
+        next();
+        return;
+      }
+      res.sendFile(join(publicDir, 'index.html'), next);
+    });
+    logger.log(`Storefront static files from ${publicDir}`);
+  }
 
   // Security middleware (needs `esModuleInterop` in tsconfig so CJS `compression` emits a callable default in dist).
   app.use(helmet());
@@ -34,11 +60,10 @@ async function bootstrap() {
   const apiPrefix = configService.get<string>('API_PREFIX', 'api');
   const apiVersion = configService.get<string>('API_VERSION', 'v1');
 
+  // Version is already in the path (`api` + `v1`). Do not enable URI versioning here: with
+  // `defaultVersion` and no `@Version()` on controllers, Nest still prefixes routes (e.g.
+  // `/api/v1/1/health/...`) so K8s probes on `/api/v1/health/...` return 404.
   app.setGlobalPrefix(`${apiPrefix}/${apiVersion}`);
-  app.enableVersioning({
-    type: VersioningType.URI,
-    defaultVersion: '1',
-  });
 
   // Global pipes
   app.useGlobalPipes(

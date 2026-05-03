@@ -1,0 +1,17 @@
+# Context for: docker build -f server/docker/Dockerfile .
+.git
+.github
+**/.DS_Store
+**/node_modules
+**/dist
+**/coverage
+**/.nyc_output
+**/*.log
+terraform/.terraform
+terraform/.terraform.lock.hcl
+**/.env
+**/.env.*
+k8s
+docs
+scripts
+*.md
