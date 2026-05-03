@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, SetMetadata } from '@nestjs/common';
 import {
   HealthCheckService,
   HealthCheck,
@@ -7,10 +7,12 @@ import {
   DiskHealthIndicator,
 } from '@nestjs/terminus';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { SkipThrottle } from '@nestjs/throttler';
 import { Public } from '@common/decorators/public.decorator';
 import { SKIP_TRANSFORM_KEY } from '@common/interceptors/transform.interceptor';
-import { SetMetadata } from '@nestjs/common';
 
+/** Probes must never share the global Throttler bucket (kubelet/LB SNAT can look like one client). */
+@SkipThrottle()
 @ApiTags('health')
 @Controller('health')
 export class HealthController {

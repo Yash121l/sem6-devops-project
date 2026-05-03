@@ -216,7 +216,7 @@ Full IAM and teardown notes: [`deployment.md`](./deployment.md).
 | **Blank page + MSW** | Service worker / `VITE_ENABLE_MSW`; unregister SW; app still mounts after MSW failure. |
 | **CORS in local dev** | `CORS_ORIGIN` must match Vite origin (`http://localhost:5173`). |
 | **502 / wrong API in prod** | Hit the **LoadBalancer DNS** root URL; confirm image includes `public/index.html` from client build. |
-| **POST `/cart/items` hangs or 429** | Send header **`x-session-id`** for guest carts. Behind ELB the API uses **`trust proxy`** so throttling is per real client. Pool **`min: 0`** avoids starving small RDS; use **`curl -m 30 -v`** to see timeouts vs 429. |
+| **POST `/cart/items` hangs or 429** | Send **`x-session-id`** (allowed in CORS). **`HealthController` uses `@SkipThrottle()`** so kube/LB probes do not share the global rate-limit bucket with real traffic (SNAT can make every probe look like one IP). Pool **`min: 0`** avoids starving small RDS. Use **`curl -m 30 -v`** to see timeouts vs 429 vs RST. |
 
 ### Verify the API on the load balancer
 
