@@ -112,6 +112,7 @@ function CartItem({ item }) {
                   item.quantity - 1,
                   item.size,
                   item.color,
+                  item.cartItemId,
                 )
               }
               className="p-2 hover:bg-muted transition-colors"
@@ -129,6 +130,7 @@ function CartItem({ item }) {
                   item.quantity + 1,
                   item.size,
                   item.color,
+                  item.cartItemId,
                 )
               }
               className="p-2 hover:bg-muted transition-colors"
@@ -139,7 +141,9 @@ function CartItem({ item }) {
           </div>
 
           <button
-            onClick={() => removeItem(item.id, item.size, item.color)}
+            onClick={() =>
+              removeItem(item.id, item.size, item.color, item.cartItemId)
+            }
             className="text-muted-foreground hover:text-destructive transition-colors p-2"
             aria-label="Remove item"
           >
@@ -154,15 +158,26 @@ function CartItem({ item }) {
 /**
  * Order summary card
  */
-function OrderSummary({ subtotal, hasFreeShipping }) {
+function OrderSummary({ subtotal, hasFreeShipping, serverTotals }) {
   const [promoCode, setPromoCode] = useState("");
   const [promoApplied, setPromoApplied] = useState(false);
   const [promoError, setPromoError] = useState("");
 
-  const shipping = hasFreeShipping ? 0 : 9.99;
-  const discount = promoApplied ? subtotal * 0.1 : 0; // 10% discount
-  const tax = (subtotal - discount) * 0.08; // 8% tax
-  const total = subtotal - discount + shipping + tax;
+  const useServer = Boolean(serverTotals);
+  const shipping = useServer
+    ? serverTotals.shippingAmount
+    : hasFreeShipping
+      ? 0
+      : 9.99;
+  const discount = useServer
+    ? serverTotals.discountAmount
+    : promoApplied
+      ? subtotal * 0.1
+      : 0;
+  const tax = useServer ? serverTotals.taxAmount : (subtotal - discount) * 0.08;
+  const total = useServer
+    ? serverTotals.total
+    : subtotal - discount + shipping + tax;
 
   const handleApplyPromo = () => {
     if (promoCode.toUpperCase() === "SAVE10") {
@@ -177,32 +192,33 @@ function OrderSummary({ subtotal, hasFreeShipping }) {
     <Card className="p-6 sticky top-24">
       <h2 className="font-heading text-xl font-bold mb-4">Order Summary</h2>
 
-      {/* Promo code */}
-      <div className="mb-6">
-        <label className="text-sm font-medium mb-2 block">Promo Code</label>
-        <div className="flex gap-2">
-          <div className="relative flex-1">
-            <Tag className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Enter code"
-              value={promoCode}
-              onChange={(e) => setPromoCode(e.target.value)}
-              className="pl-9"
-            />
+      {!useServer && (
+        <div className="mb-6">
+          <label className="text-sm font-medium mb-2 block">Promo Code</label>
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Tag className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Enter code"
+                value={promoCode}
+                onChange={(e) => setPromoCode(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+            <Button variant="outline" onClick={handleApplyPromo}>
+              Apply
+            </Button>
           </div>
-          <Button variant="outline" onClick={handleApplyPromo}>
-            Apply
-          </Button>
+          {promoError && (
+            <p className="text-xs text-destructive mt-1">{promoError}</p>
+          )}
+          {promoApplied && (
+            <p className="text-xs text-success mt-1">
+              Code applied! 10% discount
+            </p>
+          )}
         </div>
-        {promoError && (
-          <p className="text-xs text-destructive mt-1">{promoError}</p>
-        )}
-        {promoApplied && (
-          <p className="text-xs text-success mt-1">
-            Code applied! 10% discount
-          </p>
-        )}
-      </div>
+      )}
 
       <Separator className="my-4" />
 
@@ -212,9 +228,9 @@ function OrderSummary({ subtotal, hasFreeShipping }) {
           <span className="text-muted-foreground">Subtotal</span>
           <span>{formatPrice(subtotal)}</span>
         </div>
-        {promoApplied && (
+        {(useServer ? discount > 0 : promoApplied) && (
           <div className="flex justify-between text-success">
-            <span>Promo Discount</span>
+            <span>Discount</span>
             <span>-{formatPrice(discount)}</span>
           </div>
         )}
@@ -256,8 +272,15 @@ function OrderSummary({ subtotal, hasFreeShipping }) {
  * @returns {JSX.Element} Cart page
  */
 export function CartPage() {
-  const { items, subtotal, hasFreeShipping, freeShippingThreshold, clearCart } =
-    useCart();
+  const {
+    items,
+    subtotal,
+    hasFreeShipping,
+    freeShippingThreshold,
+    clearCart,
+    serverMode,
+    serverTotals,
+  } = useCart();
 
   // Get recommended products (random selection from products not in cart)
   const recommendedProducts = products
@@ -322,7 +345,9 @@ export function CartPage() {
           <Button
             variant="ghost"
             className="text-destructive"
-            onClick={clearCart}
+            onClick={() => {
+              void clearCart();
+            }}
           >
             Clear Cart
           </Button>
@@ -339,7 +364,10 @@ export function CartPage() {
             <div className="divide-y">
               {items.map((item, index) => (
                 <CartItem
-                  key={`${item.id}-${item.size}-${item.color}-${index}`}
+                  key={
+                    item.cartItemId ||
+                    `${item.id}-${item.size}-${item.color}-${index}`
+                  }
                   item={item}
                 />
               ))}
@@ -357,6 +385,7 @@ export function CartPage() {
             <OrderSummary
               subtotal={subtotal}
               hasFreeShipping={hasFreeShipping}
+              serverTotals={serverMode ? serverTotals : null}
             />
           </div>
         </div>

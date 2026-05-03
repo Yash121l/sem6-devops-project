@@ -6,13 +6,17 @@ import {
   Body,
   Param,
   Query,
+  Headers,
   UseGuards,
   ParseUUIDPipe,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { OrdersService } from './orders.service';
 import {
   CreateOrderDto,
+  GuestCheckoutDto,
+  GuestOrderConfirmationQueryDto,
   UpdateOrderStatusDto,
   CancelOrderDto,
   OrderFilterDto,
@@ -21,6 +25,7 @@ import { PaginationDto } from '@common/dto/pagination.dto';
 import { JwtAuthGuard } from '@common/guards/jwt-auth.guard';
 import { RolesGuard } from '@common/guards/roles.guard';
 import { Roles } from '@common/decorators/roles.decorator';
+import { Public } from '@common/decorators/public.decorator';
 import { CurrentUser, AuthenticatedUser } from '@common/decorators/current-user.decorator';
 import { ResponseMessage } from '@common/decorators/response-message.decorator';
 import { UserRole } from '@common/enums';
@@ -38,6 +43,28 @@ export class OrdersController {
   @ApiResponse({ status: 201, description: 'Order placed successfully' })
   async create(@CurrentUser() user: AuthenticatedUser, @Body() createOrderDto: CreateOrderDto) {
     return this.ordersService.create(user.id, createOrderDto);
+  }
+
+  @Post('guest-checkout')
+  @Public()
+  @Throttle({ default: { limit: 20, ttl: 60000 } })
+  @ResponseMessage('Guest order placed successfully')
+  @ApiOperation({ summary: 'Guest checkout from session cart (requires x-session-id)' })
+  @ApiResponse({ status: 201, description: 'Guest order placed successfully' })
+  async guestCheckout(
+    @Headers('x-session-id') sessionId: string | undefined,
+    @Headers('idempotency-key') idempotencyKey: string | undefined,
+    @Body() dto: GuestCheckoutDto,
+  ) {
+    return this.ordersService.guestCheckout(sessionId, dto, idempotencyKey?.trim() || undefined);
+  }
+
+  @Get('guest-confirmation')
+  @Public()
+  @ResponseMessage('Order confirmation retrieved')
+  @ApiOperation({ summary: 'Public order summary for guest confirmation (orderNumber + token)' })
+  async guestConfirmation(@Query() query: GuestOrderConfirmationQueryDto) {
+    return this.ordersService.findGuestOrderConfirmation(query);
   }
 
   @Get()

@@ -6,13 +6,15 @@ import { OrdersController } from './orders.controller';
 import { OrdersService } from './orders.service';
 import { Order } from './entities/order.entity';
 import { OrderItem } from './entities/order-item.entity';
+import { IdempotencyKey } from './entities/idempotency-key.entity';
+import { Payment } from '@modules/payments/entities/payment.entity';
 import { CartModule } from '@modules/cart/cart.module';
 import { InventoryModule } from '@modules/inventory/inventory.module';
 import { CouponsModule } from '@modules/coupons/coupons.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Order, OrderItem]),
+    TypeOrmModule.forFeature([Order, OrderItem, Payment, IdempotencyKey]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

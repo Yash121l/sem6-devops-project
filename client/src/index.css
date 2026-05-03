@@ -1,51 +1,49 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,500;0,7..72,600;1,7..72,400&family=Syne:wght@500;600;700;800&display=swap");
 
 @import "tailwindcss";
 
-/* Theme Configuration for Tailwind v4 */
+/* Theme — warm editorial / catalog noir (Syne + Literata) */
 @theme {
-  /* Color tokens */
-  --color-background: oklch(100% 0 0);
-  --color-foreground: oklch(12.9% 0.042 264.695);
-  --color-card: oklch(100% 0 0);
-  --color-card-foreground: oklch(12.9% 0.042 264.695);
-  --color-popover: oklch(100% 0 0);
-  --color-popover-foreground: oklch(12.9% 0.042 264.695);
-  --color-primary: oklch(70% 0.18 45);
-  --color-primary-foreground: oklch(100% 0 0);
-  --color-secondary: oklch(60% 0.18 260);
-  --color-secondary-foreground: oklch(100% 0 0);
-  --color-muted: oklch(96.7% 0.003 264.542);
-  --color-muted-foreground: oklch(55.1% 0.027 264.364);
-  --color-accent: oklch(96.7% 0.003 264.542);
-  --color-accent-foreground: oklch(21% 0.034 264.665);
-  --color-destructive: oklch(57.7% 0.245 27.325);
-  --color-destructive-foreground: oklch(100% 0 0);
-  --color-success: oklch(60% 0.15 160);
-  --color-success-foreground: oklch(100% 0 0);
-  --color-warning: oklch(75% 0.18 80);
-  --color-warning-foreground: oklch(12.9% 0.042 264.695);
-  --color-border: oklch(92% 0.004 264.531);
-  --color-input: oklch(92% 0.004 264.531);
-  --color-ring: oklch(70% 0.18 45);
+  --color-background: oklch(98% 0.012 85);
+  --color-foreground: oklch(22% 0.045 265);
+  --color-card: oklch(99.2% 0.008 85);
+  --color-card-foreground: oklch(22% 0.045 265);
+  --color-popover: oklch(99.2% 0.008 85);
+  --color-popover-foreground: oklch(22% 0.045 265);
+  --color-primary: oklch(58% 0.19 38);
+  --color-primary-foreground: oklch(99% 0.01 85);
+  --color-secondary: oklch(35% 0.08 265);
+  --color-secondary-foreground: oklch(98% 0.01 85);
+  --color-muted: oklch(94% 0.02 85);
+  --color-muted-foreground: oklch(42% 0.04 265);
+  --color-accent: oklch(92% 0.04 55);
+  --color-accent-foreground: oklch(22% 0.045 265);
+  --color-destructive: oklch(52% 0.22 25);
+  --color-destructive-foreground: oklch(99% 0.01 85);
+  --color-success: oklch(52% 0.14 155);
+  --color-success-foreground: oklch(99% 0.01 85);
+  --color-warning: oklch(78% 0.14 85);
+  --color-warning-foreground: oklch(22% 0.045 265);
+  --color-border: oklch(88% 0.02 85);
+  --color-input: oklch(88% 0.02 85);
+  --color-ring: oklch(58% 0.19 38);
 
   /* Radius */
-  --radius: 0.5rem;
+  --radius: 0.375rem;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
 
-  /* Font families */
-  --font-family-sans: "Inter", system-ui, sans-serif;
-  --font-family-heading: "Poppins", system-ui, sans-serif;
+  --font-family-sans: "Literata", "Georgia", "Times New Roman", serif;
+  --font-family-heading: "Syne", system-ui, sans-serif;
 
-  /* Animations */
   --animate-accordion-down: accordion-down 0.2s ease-out;
   --animate-accordion-up: accordion-up 0.2s ease-out;
-  --animate-fade-in: fade-in 0.3s ease-out;
+  --animate-fade-in: fade-in 0.45s cubic-bezier(0.22, 1, 0.36, 1);
   --animate-slide-in: slide-in 0.3s ease-out;
   --animate-pulse-slow: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-hero-in: hero-in 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 @keyframes accordion-down {
@@ -77,6 +75,17 @@
   }
 }
 
+@keyframes hero-in {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @keyframes slide-in {
   from {
     transform: translateX(100%);
@@ -97,6 +106,18 @@ body {
   font-family: var(--font-family-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-image:
+    radial-gradient(
+      ellipse 120% 70% at 50% -15%,
+      oklch(72% 0.14 38 / 0.12),
+      transparent 55%
+    ),
+    radial-gradient(
+      ellipse 60% 40% at 100% 0%,
+      oklch(45% 0.08 265 / 0.06),
+      transparent 50%
+    );
+  background-attachment: fixed;
 }
 
 h1,
@@ -107,7 +128,7 @@ h5,
 h6 {
   font-family: var(--font-family-heading);
   font-weight: 700;
-  letter-spacing: -0.025em;
+  letter-spacing: -0.04em;
 }
 
 /* Container utility */
@@ -187,4 +208,8 @@ main {
 
 .animate-pulse-slow {
   animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-hero-in {
+  animation: hero-in 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
 }

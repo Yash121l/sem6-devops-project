@@ -41,6 +41,9 @@ export class Cart {
   @Column({ name: 'tax_amount', type: 'decimal', precision: 10, scale: 2, default: 0 })
   taxAmount: number;
 
+  @Column({ name: 'shipping_amount', type: 'decimal', precision: 10, scale: 2, default: 0 })
+  shippingAmount: number;
+
   @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
   total: number;
 

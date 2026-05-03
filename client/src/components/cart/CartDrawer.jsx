@@ -82,6 +82,7 @@ function CartItemRow({ item }) {
                   item.quantity - 1,
                   item.size,
                   item.color,
+                  item.cartItemId,
                 )
               }
               className="p-1 hover:bg-muted transition-colors"
@@ -99,6 +100,7 @@ function CartItemRow({ item }) {
                   item.quantity + 1,
                   item.size,
                   item.color,
+                  item.cartItemId,
                 )
               }
               className="p-1 hover:bg-muted transition-colors"
@@ -108,7 +110,9 @@ function CartItemRow({ item }) {
             </button>
           </div>
           <button
-            onClick={() => removeItem(item.id, item.size, item.color)}
+            onClick={() =>
+              removeItem(item.id, item.size, item.color, item.cartItemId)
+            }
             className="p-1 text-destructive hover:bg-destructive/10 rounded transition-colors"
             aria-label="Remove item"
           >
@@ -132,6 +136,8 @@ export function CartDrawer() {
     subtotal,
     freeShippingThreshold,
     itemCount,
+    serverMode,
+    serverTotals,
   } = useCart();
 
   if (!isOpen) return null;
@@ -180,7 +186,10 @@ export function CartDrawer() {
               <div className="divide-y mt-4">
                 {items.map((item, index) => (
                   <CartItemRow
-                    key={`${item.id}-${item.size}-${item.color}-${index}`}
+                    key={
+                      item.cartItemId ||
+                      `${item.id}-${item.size}-${item.color}-${index}`
+                    }
                     item={item}
                   />
                 ))}
@@ -196,8 +205,26 @@ export function CartDrawer() {
               <span>Subtotal</span>
               <span className="font-semibold">{formatPrice(subtotal)}</span>
             </div>
+            {serverMode && serverTotals && (
+              <>
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>Shipping</span>
+                  <span>{formatPrice(serverTotals.shippingAmount)}</span>
+                </div>
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>Tax</span>
+                  <span>{formatPrice(serverTotals.taxAmount)}</span>
+                </div>
+                <div className="flex justify-between text-sm font-semibold">
+                  <span>Total</span>
+                  <span>{formatPrice(serverTotals.total)}</span>
+                </div>
+              </>
+            )}
             <p className="text-xs text-muted-foreground">
-              Shipping and taxes calculated at checkout.
+              {serverMode
+                ? "Totals from your live cart."
+                : "Shipping and taxes calculated at checkout."}
             </p>
             <div className="grid gap-2">
               <Button size="lg" asChild onClick={() => toggleCart(false)}>

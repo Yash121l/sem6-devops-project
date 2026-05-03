@@ -53,7 +53,10 @@ export const mockProducts = [
     variants: [
       {
         id: "variant-1",
+        name: "Default",
         sku: "HEADPHONE-001",
+        price: "249.99",
+        isDefault: true,
         images: [],
         inventory: {
           quantity: 3,
@@ -89,7 +92,10 @@ export const mockProducts = [
     variants: [
       {
         id: "variant-2",
+        name: "Default",
         sku: "SHOE-001",
+        price: "159.99",
+        isDefault: true,
         images: [],
         inventory: {
           quantity: 12,

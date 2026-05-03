@@ -30,7 +30,7 @@ import {
   useStorefrontProduct,
   useStorefrontProducts,
 } from "@/hooks/useStorefront";
-import { getFallbackProductBySlug } from "@/lib/storefront";
+import { getFallbackProductBySlug, pickVariantIdForProduct } from "@/lib/storefront";
 import { cn, formatPrice } from "@/lib/utils";
 
 /**
@@ -226,18 +226,30 @@ export function ProductPage() {
 
   const inWishlist = isInWishlist(product.id);
 
-  const handleAddToCart = () => {
-    addItem({
-      id: product.id,
-      slug: product.slug,
-      name: product.name,
-      price: product.price,
-      image: product.images[0],
-      quantity,
-      size: selectedSize,
-      color: selectedColor,
-    });
-    toggleCart(true);
+  const handleAddToCart = async () => {
+    const variantId = pickVariantIdForProduct(
+      product,
+      selectedSize,
+      selectedColor,
+    );
+    try {
+      await addItem({
+        productId: product.id,
+        variantId,
+        defaultVariantId: product.defaultVariantId,
+        id: product.id,
+        slug: product.slug,
+        name: product.name,
+        price: product.price,
+        image: product.images[0],
+        quantity,
+        size: selectedSize,
+        color: selectedColor,
+      });
+      toggleCart(true);
+    } catch {
+      /* cartError in context */
+    }
   };
 
   const handleToggleWishlist = () => {

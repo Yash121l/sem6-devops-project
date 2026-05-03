@@ -60,8 +60,8 @@ export default {
         sm: "calc(var(--radius) - 4px)",
       },
       fontFamily: {
-        sans: ["Inter", "system-ui", "sans-serif"],
-        heading: ["Poppins", "system-ui", "sans-serif"],
+        sans: ["Literata", "Georgia", "Times New Roman", "serif"],
+        heading: ["Syne", "system-ui", "sans-serif"],
       },
       keyframes: {
         "accordion-down": {
@@ -84,6 +84,10 @@ export default {
           "0%, 100%": { opacity: "1" },
           "50%": { opacity: "0.5" },
         },
+        "hero-in": {
+          from: { opacity: "0", transform: "translateY(28px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -91,6 +95,7 @@ export default {
         "fade-in": "fade-in 0.3s ease-out",
         "slide-in": "slide-in-from-top 0.3s ease-out",
         "pulse-slow": "pulse-slow 2s ease-in-out infinite",
+        "hero-in": "hero-in 0.9s cubic-bezier(0.22, 1, 0.36, 1) both",
       },
     },
   },

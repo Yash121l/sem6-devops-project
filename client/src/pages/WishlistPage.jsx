@@ -20,16 +20,23 @@ export function WishlistPage() {
   const { items, removeItem, clearWishlist } = useWishlist();
   const { addItem, toggleCart } = useCart();
 
-  const handleAddToCart = (item) => {
-    addItem({
-      id: item.id,
-      slug: item.slug,
-      name: item.name,
-      price: item.price,
-      image: item.image,
-      quantity: 1,
-    });
-    toggleCart(true);
+  const handleAddToCart = async (item) => {
+    try {
+      await addItem({
+        productId: item.id,
+        variantId: item.defaultVariantId,
+        defaultVariantId: item.defaultVariantId,
+        id: item.id,
+        slug: item.slug,
+        name: item.name,
+        price: item.price,
+        image: item.image,
+        quantity: 1,
+      });
+      toggleCart(true);
+    } catch {
+      /* cart context error */
+    }
   };
 
   if (items.length === 0) {

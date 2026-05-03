@@ -50,13 +50,16 @@ export function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 w-full border-b border-border/90 bg-background/90 shadow-sm backdrop-blur-md supports-[backdrop-filter]:bg-background/75">
       {/* Top bar - promotions */}
-      <div className="bg-primary text-primary-foreground text-center py-2 text-sm">
-        <p>
-          🎉 Free shipping on orders over $75! Use code:{" "}
-          <strong>FREESHIP</strong>
-        </p>
+      <div className="border-b border-border/80 bg-secondary text-secondary-foreground">
+        <div className="container-custom flex flex-wrap items-center justify-center gap-x-6 gap-y-1 py-2 text-[11px] font-heading font-semibold uppercase tracking-[0.2em]">
+          <span>Free shipping $75+</span>
+          <span className="hidden sm:inline text-secondary-foreground/35">|</span>
+          <span>
+            Code <span className="text-primary">FREESHIP</span>
+          </span>
+        </div>
       </div>
 
       {/* Main header */}
@@ -80,10 +83,14 @@ export function Header() {
           {/* Logo */}
           <Link
             to="/"
-            className="flex items-center gap-2 font-heading text-xl font-bold text-primary"
+            className="group flex items-center gap-2 font-heading text-xl font-extrabold tracking-tight text-foreground"
           >
-            <Package className="h-6 w-6" />
-            <span className="hidden sm:inline">ShopSmart</span>
+            <span className="flex h-9 w-9 items-center justify-center rounded-md bg-primary text-primary-foreground shadow-sm transition-transform group-hover:-rotate-6">
+              <Package className="h-5 w-5" aria-hidden />
+            </span>
+            <span className="hidden sm:inline">
+              Shop<span className="text-primary">Smart</span>
+            </span>
           </Link>
 
           {/* Desktop Navigation */}

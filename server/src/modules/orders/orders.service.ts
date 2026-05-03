@@ -9,16 +9,20 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { Order } from './entities/order.entity';
 import { OrderItem } from './entities/order-item.entity';
+import { IdempotencyKey } from './entities/idempotency-key.entity';
+import { Payment } from '@modules/payments/entities/payment.entity';
 import {
   CreateOrderDto,
+  GuestCheckoutDto,
+  GuestOrderConfirmationQueryDto,
   UpdateOrderStatusDto,
   CancelOrderDto,
   OrderFilterDto,
 } from './dto/order.dto';
 import { PaginationDto } from '@common/dto/pagination.dto';
 import { paginate, PaginatedResult } from '@common/utils/pagination.util';
-import { generateOrderNumber } from '@common/utils/string.util';
-import { OrderStatus, PaymentStatus, UserRole } from '@common/enums';
+import { generateOrderNumber, generateTransactionId, generateConfirmationToken } from '@common/utils/string.util';
+import { OrderStatus, PaymentStatus, UserRole, PaymentMethod } from '@common/enums';
 import { CartService } from '@modules/cart/cart.service';
 import { InventoryService } from '@modules/inventory/inventory.service';
 import { CouponsService } from '@modules/coupons/coupons.service';
@@ -41,26 +45,95 @@ export class OrdersService {
     private readonly orderRepository: Repository<Order>,
     @InjectRepository(OrderItem)
     private readonly orderItemRepository: Repository<OrderItem>,
+    @InjectRepository(Payment)
+    private readonly paymentRepository: Repository<Payment>,
+    @InjectRepository(IdempotencyKey)
+    private readonly idempotencyKeyRepository: Repository<IdempotencyKey>,
     private readonly dataSource: DataSource,
     private readonly cartService: CartService,
     private readonly inventoryService: InventoryService,
     private readonly couponsService: CouponsService,
   ) {}
 
+  private async applySimulatedPayment(orderId: string, amount: number): Promise<void> {
+    const payment = this.paymentRepository.create({
+      orderId,
+      transactionId: generateTransactionId(),
+      provider: 'manual',
+      method: PaymentMethod.MANUAL,
+      amount,
+      currency: 'USD',
+      status: PaymentStatus.COMPLETED,
+      paidAt: new Date(),
+      providerResponse: { simulated: true },
+    });
+    await this.paymentRepository.save(payment);
+    await this.updatePaymentStatus(orderId, PaymentStatus.COMPLETED);
+  }
+
   async create(userId: string, createOrderDto: CreateOrderDto): Promise<Order> {
+    return this.createFromCart({
+      userId,
+      sessionId: undefined,
+      dto: createOrderDto,
+      customerEmail: null,
+      confirmationToken: null,
+      simulatePayment: false,
+      idempotencyKey: undefined,
+    });
+  }
+
+  /**
+   * Place order from the DB cart (authenticated user or guest session).
+   * Totals and shipping always come from {@link CartService.recalculateCart}.
+   */
+  async createFromCart(params: {
+    userId?: string;
+    sessionId?: string;
+    dto: CreateOrderDto;
+    customerEmail: string | null;
+    confirmationToken: string | null;
+    simulatePayment: boolean;
+    idempotencyKey?: string;
+  }): Promise<Order> {
+    const {
+      userId,
+      sessionId,
+      dto,
+      customerEmail,
+      confirmationToken,
+      simulatePayment,
+      idempotencyKey,
+    } = params;
+
+    if (!userId && !sessionId) {
+      throw new BadRequestException('Cart identity is required');
+    }
+    if (userId && sessionId) {
+      throw new BadRequestException('Provide either user or session cart identity, not both');
+    }
+
+    if (idempotencyKey) {
+      const existingKey = await this.idempotencyKeyRepository.findOne({
+        where: { key: idempotencyKey },
+      });
+      if (existingKey) {
+        return this.findOne(existingKey.orderId, userId, userId ? UserRole.CUSTOMER : undefined);
+      }
+    }
+
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
     try {
-      // Get user's cart
-      const cart = await this.cartService.getOrCreateCart(userId);
+      let cart = await this.cartService.getOrCreateCart(userId, sessionId);
+      cart = await this.cartService.recalculateCart(cart.id);
 
       if (!cart.items || cart.items.length === 0) {
         throw new BadRequestException('Cart is empty');
       }
 
-      // Reserve inventory for all items
       for (const item of cart.items) {
         const reserved = await this.inventoryService.reserve(item.variantId, item.quantity);
 
@@ -69,27 +142,27 @@ export class OrdersService {
         }
       }
 
-      // Create order
       const order = queryRunner.manager.create(Order, {
-        userId,
+        userId: userId ?? null,
+        customerEmail,
+        confirmationToken,
         orderNumber: generateOrderNumber(),
         status: OrderStatus.PENDING,
         paymentStatus: PaymentStatus.PENDING,
         subtotal: cart.subtotal,
         discountAmount: cart.discountAmount,
         taxAmount: cart.taxAmount,
-        shippingAmount: 0,
+        shippingAmount: cart.shippingAmount ?? 0,
         total: cart.total,
         couponId: cart.couponId,
-        billingAddress: createOrderDto.billingAddress,
-        shippingAddress: createOrderDto.shippingAddress,
-        notes: createOrderDto.notes,
+        billingAddress: dto.billingAddress,
+        shippingAddress: dto.shippingAddress,
+        notes: dto.notes ?? null,
         placedAt: new Date(),
       });
 
       const savedOrder = await queryRunner.manager.save(order);
 
-      // Create order items
       const orderItems = cart.items.map((cartItem) =>
         queryRunner.manager.create(OrderItem, {
           orderId: savedOrder.id,
@@ -112,23 +185,98 @@ export class OrdersService {
 
       await queryRunner.manager.save(orderItems);
 
-      // Increment coupon usage if applicable
       if (cart.couponId) {
         await this.couponsService.incrementUsage(cart.couponId);
       }
 
-      // Clear cart
-      await this.cartService.clearCart(userId);
+      await this.cartService.clearCart(userId, sessionId);
+
+      if (idempotencyKey) {
+        await queryRunner.manager.save(
+          queryRunner.manager.create(IdempotencyKey, {
+            key: idempotencyKey,
+            orderId: savedOrder.id,
+          }),
+        );
+      }
 
       await queryRunner.commitTransaction();
 
-      return this.findOne(savedOrder.id, userId);
+      if (simulatePayment) {
+        await this.applySimulatedPayment(savedOrder.id, Number(savedOrder.total));
+      }
+
+      return this.findOne(savedOrder.id, userId, userId ? UserRole.CUSTOMER : undefined);
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw error;
     } finally {
       await queryRunner.release();
     }
+  }
+
+  async guestCheckout(
+    sessionId: string | undefined,
+    dto: GuestCheckoutDto,
+    idempotencyKey?: string,
+  ): Promise<{ orderNumber: string; confirmationToken: string; orderId: string }> {
+    if (!sessionId?.trim()) {
+      throw new BadRequestException('x-session-id header is required for guest checkout');
+    }
+
+    const confirmationToken = generateConfirmationToken();
+
+    const order = await this.createFromCart({
+      userId: undefined,
+      sessionId: sessionId.trim(),
+      dto,
+      customerEmail: dto.customerEmail,
+      confirmationToken,
+      simulatePayment: true,
+      idempotencyKey,
+    });
+
+    return {
+      orderId: order.id,
+      orderNumber: order.orderNumber,
+      confirmationToken: order.confirmationToken ?? confirmationToken,
+    };
+  }
+
+  async findGuestOrderConfirmation(
+    query: GuestOrderConfirmationQueryDto,
+  ): Promise<Record<string, unknown>> {
+    const order = await this.orderRepository.findOne({
+      where: {
+        orderNumber: query.orderNumber,
+        confirmationToken: query.token,
+      },
+      relations: ['items'],
+    });
+
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    return {
+      orderNumber: order.orderNumber,
+      status: order.status,
+      paymentStatus: order.paymentStatus,
+      subtotal: order.subtotal,
+      discountAmount: order.discountAmount,
+      taxAmount: order.taxAmount,
+      shippingAmount: order.shippingAmount,
+      total: order.total,
+      customerEmail: order.customerEmail,
+      placedAt: order.placedAt,
+      items: order.items.map((line) => ({
+        productName: line.productName,
+        variantName: line.variantName,
+        quantity: line.quantity,
+        unitPrice: line.unitPrice,
+        totalPrice: line.totalPrice,
+      })),
+    };
   }
 
   async findAll(
@@ -182,8 +330,7 @@ export class OrdersService {
       throw new NotFoundException('Order not found');
     }
 
-    // Check ownership if user is a customer
-    if (userId && userRole === UserRole.CUSTOMER && order.userId !== userId) {
+    if (userId && userRole === UserRole.CUSTOMER && order.userId && order.userId !== userId) {
       throw new ForbiddenException('You do not have access to this order');
     }
 
@@ -244,8 +391,7 @@ export class OrdersService {
   async cancel(id: string, cancelDto: CancelOrderDto, userId?: string): Promise<Order> {
     const order = await this.findOne(id);
 
-    // Check if user owns the order (for customer cancellation)
-    if (userId && order.userId !== userId) {
+    if (userId && order.userId && order.userId !== userId) {
       throw new ForbiddenException('You cannot cancel this order');
     }
 
@@ -272,13 +418,24 @@ export class OrdersService {
   }
 
   async updatePaymentStatus(id: string, paymentStatus: PaymentStatus): Promise<Order> {
-    const order = await this.findOne(id);
+    const order = await this.orderRepository.findOne({
+      where: { id },
+      relations: ['items'],
+    });
+
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
 
     order.paymentStatus = paymentStatus;
 
-    // Auto-confirm order when payment is completed
     if (paymentStatus === PaymentStatus.COMPLETED && order.status === OrderStatus.PENDING) {
       order.status = OrderStatus.CONFIRMED;
+      for (const item of order.items) {
+        if (item.variantId) {
+          await this.inventoryService.commit(item.variantId, item.quantity);
+        }
+      }
     }
 
     return this.orderRepository.save(order);

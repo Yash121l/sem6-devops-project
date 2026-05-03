@@ -37,4 +37,9 @@ export const validationSchema = Joi.object({
 
   // Logging
   LOG_LEVEL: Joi.string().valid('error', 'warn', 'log', 'debug', 'verbose').default('log'),
+
+  // Cart / checkout totals (server authority; env vars are strings — parsed in checkout-pricing.config)
+  CART_TAX_RATE: Joi.string().default('0.08'),
+  CART_FREE_SHIPPING_THRESHOLD: Joi.string().default('75'),
+  CART_FLAT_SHIPPING: Joi.string().default('9.99'),
 });

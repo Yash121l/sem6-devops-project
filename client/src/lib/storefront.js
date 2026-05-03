@@ -1,6 +1,7 @@
 import { categories as demoCategories } from "@/data/categories";
 import { products as demoProducts } from "@/data/products";
 import { calculateDiscount } from "@/lib/utils";
+import { getOrCreateSessionId } from "@/lib/session-id";
 
 const API_BASE_URL = (
   import.meta.env.VITE_API_BASE_URL ||
@@ -32,6 +33,16 @@ function buildPath(path, searchParams) {
   return `${API_BASE_URL}${path}${queryString ? `?${queryString}` : ""}`;
 }
 
+function authHeaders(accessToken) {
+  return accessToken
+    ? { Authorization: `Bearer ${accessToken}` }
+    : {};
+}
+
+function sessionHeaders() {
+  return { "x-session-id": getOrCreateSessionId() };
+}
+
 async function apiRequest(
   path,
   { body, headers, searchParams, ...options } = {},
@@ -46,9 +57,15 @@ async function apiRequest(
     body: body ? JSON.stringify(body) : undefined,
   });
 
-  const payload = await response.json().catch(() => ({
-    message: `Request failed with status ${response.status}`,
-  }));
+  const text = await response.text();
+  let payload = {};
+  if (text) {
+    try {
+      payload = JSON.parse(text);
+    } catch {
+      payload = { message: text || `Request failed with status ${response.status}` };
+    }
+  }
 
   if (!response.ok) {
     throw new Error(payload?.message || payload?.error || "Request failed");
@@ -191,6 +208,66 @@ function mapApiCategory(category, catalogProducts = []) {
   };
 }
 
+function mapApiVariants(product) {
+  const list = Array.isArray(product?.variants) ? product.variants : [];
+  return list.map((v) => ({
+    id: v.id,
+    name: v.name,
+    sku: v.sku,
+    price: Number(v.price ?? 0),
+    images: Array.isArray(v.images) ? v.images.filter(Boolean) : [],
+    attributes: v.attributes && typeof v.attributes === "object" ? v.attributes : {},
+    isDefault: Boolean(v.isDefault),
+  }));
+}
+
+function resolveDefaultVariantId(variants, fallbackProduct) {
+  const def = variants.find((v) => v.isDefault);
+  if (def) {
+    return def.id;
+  }
+  if (variants.length > 0) {
+    return variants[0].id;
+  }
+  return fallbackProduct?.defaultVariantId ?? null;
+}
+
+/**
+ * Pick variant UUID for add-to-cart from optional size/color (matches variant.attributes when present).
+ * @param {object} product - Mapped storefront product (includes variants, defaultVariantId)
+ */
+export function pickVariantIdForProduct(product, selectedSize, selectedColor) {
+  const variants = product.variants || [];
+  if (!variants.length) {
+    return product.defaultVariantId ?? null;
+  }
+  const size = selectedSize ?? null;
+  const color = selectedColor ?? null;
+  if (!size && !color) {
+    return product.defaultVariantId ?? resolveDefaultVariantId(variants, product);
+  }
+  const match = variants.find((v) => {
+    const a = v.attributes || {};
+    const sz = a.size ?? a.Size;
+    const col = a.color ?? a.Color ?? a.colour;
+    if (size && color) {
+      return String(sz) === String(size) && String(col) === String(color);
+    }
+    if (size) {
+      return String(sz) === String(size);
+    }
+    if (color) {
+      return String(col) === String(color);
+    }
+    return false;
+  });
+  return (
+    match?.id ??
+    product.defaultVariantId ??
+    resolveDefaultVariantId(variants, product)
+  );
+}
+
 function mapApiProduct(product) {
   const fallbackProduct = findProductFallback(product);
   const attributes = product.attributes || {};
@@ -201,6 +278,8 @@ function mapApiProduct(product) {
       : fallbackProduct?.originalPrice || null;
   const categorySlug =
     product.category?.slug || fallbackProduct?.category || "general";
+  const variants = mapApiVariants(product);
+  const defaultVariantId = resolveDefaultVariantId(variants, fallbackProduct);
 
   return {
     id: product.id,
@@ -245,6 +324,8 @@ function mapApiProduct(product) {
     soldThisWeek: Number(
       attributes.soldThisWeek ?? fallbackProduct?.soldThisWeek ?? 0,
     ),
+    variants,
+    defaultVariantId,
   };
 }
 
@@ -378,6 +459,91 @@ export async function loginWithApi(email, password) {
     refreshToken: authPayload.refreshToken,
     expiresIn: authPayload.expiresIn,
   };
+}
+
+/**
+ * Map a server cart line to UI cart row shape.
+ * @param {object} line
+ */
+export function mapServerCartLine(line) {
+  const img =
+    (Array.isArray(line.product?.images) && line.product.images[0]) ||
+    DEFAULT_PRODUCT_IMAGE;
+  return {
+    id: line.productId,
+    cartItemId: line.id,
+    slug: line.product?.slug,
+    name: line.product?.name ?? "Item",
+    price: Number(line.unitPrice),
+    image: img,
+    quantity: line.quantity,
+    variantId: line.variantId,
+    size: line.metadata?.size,
+    color: line.metadata?.color,
+    variantName: line.variant?.name,
+  };
+}
+
+export async function fetchServerCart(accessToken) {
+  return apiRequest("/cart", {
+    method: "GET",
+    headers: { ...authHeaders(accessToken), ...sessionHeaders() },
+  });
+}
+
+export async function addServerCartItem(
+  accessToken,
+  { productId, variantId, quantity = 1, metadata },
+) {
+  return apiRequest("/cart/items", {
+    method: "POST",
+    body: { productId, variantId, quantity, metadata },
+    headers: { ...authHeaders(accessToken), ...sessionHeaders() },
+  });
+}
+
+export async function updateServerCartItem(accessToken, itemId, quantity) {
+  return apiRequest(`/cart/items/${itemId}`, {
+    method: "PUT",
+    body: { quantity },
+    headers: { ...authHeaders(accessToken), ...sessionHeaders() },
+  });
+}
+
+export async function removeServerCartItem(accessToken, itemId) {
+  return apiRequest(`/cart/items/${itemId}`, {
+    method: "DELETE",
+    headers: { ...authHeaders(accessToken), ...sessionHeaders() },
+  });
+}
+
+export async function clearServerCart(accessToken) {
+  await apiRequest("/cart", {
+    method: "DELETE",
+    headers: { ...authHeaders(accessToken), ...sessionHeaders() },
+  });
+}
+
+export async function guestCheckoutApi(accessToken, dto, idempotencyKey) {
+  const headers = {
+    ...sessionHeaders(),
+    ...authHeaders(accessToken),
+  };
+  if (idempotencyKey) {
+    headers["idempotency-key"] = idempotencyKey;
+  }
+  return apiRequest("/orders/guest-checkout", {
+    method: "POST",
+    body: dto,
+    headers,
+  });
+}
+
+export async function fetchGuestOrderConfirmation(orderNumber, token) {
+  return apiRequest("/orders/guest-confirmation", {
+    method: "GET",
+    searchParams: { orderNumber, token },
+  });
 }
 
 export async function registerWithApi(name, email, password) {

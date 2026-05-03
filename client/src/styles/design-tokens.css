@@ -9,10 +9,9 @@
      COLOR PALETTE - Psychological Design
      =========================================== */
 
-  /* Primary Brand Colors */
-  --color-primary: #ff6b35; /* Orange - Action, Energy, Urgency */
-  --color-primary-dark: #e55a25;
-  --color-primary-light: #ff8a5c;
+  --color-primary: #c45c2e;
+  --color-primary-dark: #9e471f;
+  --color-primary-light: #d9784a;
 
   /* Secondary Colors */
   --color-secondary: #2563eb; /* Trust Blue - Security, Reliability */
@@ -58,8 +57,8 @@
      =========================================== */
 
   /* Font Families */
-  --font-heading: "Poppins", system-ui, -apple-system, sans-serif;
-  --font-body: "Inter", system-ui, -apple-system, sans-serif;
+  --font-heading: "Syne", system-ui, -apple-system, sans-serif;
+  --font-body: "Literata", Georgia, "Times New Roman", serif;
   --font-mono: "Fira Code", monospace;
 
   /* Font Sizes */

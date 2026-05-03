@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Cart } from './entities/cart.entity';
@@ -7,6 +8,7 @@ import { AddToCartDto, UpdateCartItemDto } from './dto/cart.dto';
 import { ProductsService } from '@modules/products/products.service';
 import { InventoryService } from '@modules/inventory/inventory.service';
 import { CouponsService } from '@modules/coupons/coupons.service';
+import { getCheckoutPricing } from '@config/checkout-pricing.config';
 
 @Injectable()
 export class CartService {
@@ -18,6 +20,7 @@ export class CartService {
     private readonly productsService: ProductsService,
     private readonly inventoryService: InventoryService,
     private readonly couponsService: CouponsService,
+    private readonly configService: ConfigService,
   ) {}
 
   async getOrCreateCart(userId?: string, sessionId?: string): Promise<Cart> {
@@ -161,6 +164,7 @@ export class CartService {
     cart.subtotal = 0;
     cart.discountAmount = 0;
     cart.taxAmount = 0;
+    cart.shippingAmount = 0;
     cart.total = 0;
     cart.couponId = null;
 
@@ -239,7 +243,8 @@ export class CartService {
     }
   }
 
-  private async recalculateCart(cartId: string): Promise<Cart> {
+  /** Recompute subtotal, discount, tax, shipping, and total from DB line items (server authority). */
+  async recalculateCart(cartId: string): Promise<Cart> {
     const cart = await this.cartRepository.findOne({
       where: { id: cartId },
       relations: ['items', 'items.product', 'items.variant', 'coupon'],
@@ -249,22 +254,25 @@ export class CartService {
       throw new NotFoundException('Cart not found');
     }
 
-    // Calculate subtotal
+    const pricing = getCheckoutPricing(this.configService);
+
     cart.subtotal = cart.items.reduce((sum, item) => sum + Number(item.totalPrice), 0);
 
-    // Calculate discount
     if (cart.coupon) {
       cart.discountAmount = this.couponsService.calculateDiscount(cart.coupon, cart.subtotal);
     } else {
       cart.discountAmount = 0;
     }
 
-    // Calculate tax (simplified - 10%)
-    const taxableAmount = cart.subtotal - cart.discountAmount;
-    cart.taxAmount = taxableAmount * 0.1;
+    const taxableAmount = Number(cart.subtotal) - Number(cart.discountAmount);
+    cart.taxAmount = Math.round(taxableAmount * pricing.taxRate * 100) / 100;
 
-    // Calculate total
-    cart.total = cart.subtotal - cart.discountAmount + cart.taxAmount;
+    const qualifiesFreeShipping = Number(cart.subtotal) >= pricing.freeShippingThreshold;
+    cart.shippingAmount = qualifiesFreeShipping ? 0 : pricing.flatShipping;
+
+    cart.total =
+      Math.round((taxableAmount + Number(cart.taxAmount) + Number(cart.shippingAmount)) * 100) /
+      100;
 
     await this.cartRepository.save(cart);
 

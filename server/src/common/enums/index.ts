@@ -35,6 +35,8 @@ export enum PaymentMethod {
   PAYPAL = 'paypal',
   BANK_TRANSFER = 'bank_transfer',
   CASH_ON_DELIVERY = 'cash_on_delivery',
+  /** Simulated / manual capture (no PSP); used for guest checkout dummy payment */
+  MANUAL = 'manual',
 }
 
 export enum DiscountType {

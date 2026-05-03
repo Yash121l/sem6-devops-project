@@ -1,5 +1,14 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsOptional, IsEnum, IsObject, ValidateNested, MaxLength } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsEnum,
+  IsObject,
+  ValidateNested,
+  MaxLength,
+  IsEmail,
+  Matches,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { OrderStatus } from '@common/enums';
 
@@ -50,6 +59,12 @@ export class AddressDto {
   @IsString()
   @MaxLength(20)
   phone?: string;
+
+  @ApiPropertyOptional({ description: 'Contact email for this address (e.g. shipping notices)' })
+  @IsOptional()
+  @IsEmail()
+  @MaxLength(255)
+  email?: string;
 }
 
 export class CreateOrderDto {
@@ -70,6 +85,27 @@ export class CreateOrderDto {
   @IsString()
   @MaxLength(1000)
   notes?: string;
+}
+
+/** Guest checkout: same addresses as authenticated checkout plus confirmation email. */
+export class GuestCheckoutDto extends CreateOrderDto {
+  @ApiProperty({ example: 'buyer@example.com' })
+  @IsEmail()
+  @MaxLength(255)
+  customerEmail: string;
+}
+
+export class GuestOrderConfirmationQueryDto {
+  @ApiProperty()
+  @IsString()
+  @MaxLength(50)
+  orderNumber: string;
+
+  @ApiProperty({ description: 'Secret token returned from guest checkout' })
+  @IsString()
+  @MaxLength(128)
+  @Matches(/^[a-f0-9]{64}$/i, { message: 'Invalid confirmation token' })
+  token: string;
 }
 
 export class UpdateOrderStatusDto {

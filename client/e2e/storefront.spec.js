@@ -80,7 +80,8 @@ test.describe("Storefront E2E", () => {
     await expect(page.getByText("Review Your Order")).toBeVisible();
     await page.getByRole("button", { name: /Place Order/i }).click();
 
-    await expect(page).toHaveURL(/\/order-confirmation\/SS-/);
+    await expect(page).toHaveURL(/\/order-confirmation\/ORD-/);
+    await expect(page).toHaveURL(/token=/);
     await expect(
       page.getByRole("heading", { name: "Order Confirmed!" }),
     ).toBeVisible();

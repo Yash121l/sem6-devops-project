@@ -18,12 +18,19 @@ export class Order extends BaseEntity {
   orderNumber: string;
 
   @Index('idx_orders_user_id')
-  @Column({ name: 'user_id', type: 'uuid' })
-  userId: string;
+  @Column({ name: 'user_id', type: 'uuid', nullable: true })
+  userId: string | null;
 
-  @ManyToOne(() => User, (user) => user.orders)
+  @ManyToOne(() => User, (user) => user.orders, { nullable: true })
   @JoinColumn({ name: 'user_id' })
-  user: User;
+  user: User | null;
+
+  @Column({ name: 'customer_email', type: 'varchar', length: 255, nullable: true })
+  customerEmail: string | null;
+
+  @Index({ unique: true })
+  @Column({ name: 'confirmation_token', type: 'varchar', length: 128, nullable: true, unique: true })
+  confirmationToken: string | null;
 
   @Column({ name: 'coupon_id', type: 'uuid', nullable: true })
   couponId: string | null;

@@ -24,6 +24,13 @@ export function generateSku(prefix: string): string {
   return `${prefix.toUpperCase()}-${random}`;
 }
 
+import { randomBytes } from 'crypto';
+
+/** Opaque token for guest order confirmation URLs (high entropy). */
+export function generateConfirmationToken(): string {
+  return randomBytes(32).toString('hex');
+}
+
 export function generateCouponCode(): string {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
   let result = '';

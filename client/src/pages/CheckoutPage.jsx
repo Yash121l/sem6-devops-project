@@ -20,6 +20,8 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useCart } from "@/context/CartContext";
+import { useUser } from "@/context/UserContext";
+import { guestCheckoutApi } from "@/lib/storefront";
 import { cn, formatPrice } from "@/lib/utils";
 
 /**
@@ -77,10 +79,14 @@ function CheckoutStepper({ currentStep }) {
 /**
  * Order summary sidebar
  */
-function OrderSummarySidebar({ items, subtotal, hasFreeShipping }) {
-  const shipping = hasFreeShipping ? 0 : 9.99;
-  const tax = subtotal * 0.08;
-  const total = subtotal + shipping + tax;
+function OrderSummarySidebar({ items, subtotal, hasFreeShipping, serverTotals }) {
+  const shipping = serverTotals
+    ? serverTotals.shippingAmount
+    : hasFreeShipping
+      ? 0
+      : 9.99;
+  const tax = serverTotals ? serverTotals.taxAmount : subtotal * 0.08;
+  const total = serverTotals ? serverTotals.total : subtotal + shipping + tax;
 
   return (
     <Card className="p-6">
@@ -117,8 +123,24 @@ function OrderSummarySidebar({ items, subtotal, hasFreeShipping }) {
         </div>
         <div className="flex justify-between">
           <span className="text-muted-foreground">Shipping</span>
-          <span className={hasFreeShipping ? "text-success" : ""}>
-            {hasFreeShipping ? "FREE" : formatPrice(shipping)}
+          <span
+            className={
+              serverTotals
+                ? shipping <= 0
+                  ? "text-success"
+                  : ""
+                : hasFreeShipping
+                  ? "text-success"
+                  : ""
+            }
+          >
+            {serverTotals
+              ? shipping <= 0
+                ? "FREE"
+                : formatPrice(shipping)
+              : hasFreeShipping
+                ? "FREE"
+                : formatPrice(shipping)}
           </span>
         </div>
         <div className="flex justify-between">
@@ -426,13 +448,20 @@ function ReviewStep({
   items,
   subtotal,
   hasFreeShipping,
+  serverTotals,
+  isSubmitting,
   onBack,
   onComplete,
 }) {
-  const shipping =
-    formData.shippingMethod === "express" ? 14.99 : hasFreeShipping ? 0 : 9.99;
-  const tax = subtotal * 0.08;
-  const total = subtotal + shipping + tax;
+  const shipping = serverTotals
+    ? serverTotals.shippingAmount
+    : formData.shippingMethod === "express"
+      ? 14.99
+      : hasFreeShipping
+        ? 0
+        : 9.99;
+  const tax = serverTotals ? serverTotals.taxAmount : subtotal * 0.08;
+  const total = serverTotals ? serverTotals.total : subtotal + shipping + tax;
 
   return (
     <div className="space-y-6">
@@ -493,7 +522,9 @@ function ReviewStep({
           </div>
           <div className="flex justify-between">
             <span>Shipping</span>
-            <span>{shipping === 0 ? "FREE" : formatPrice(shipping)}</span>
+            <span>
+              {shipping <= 0 ? "FREE" : formatPrice(shipping)}
+            </span>
           </div>
           <div className="flex justify-between">
             <span>Tax</span>
@@ -512,9 +543,13 @@ function ReviewStep({
           <ChevronLeft className="h-4 w-4 mr-2" />
           Back
         </Button>
-        <Button size="lg" onClick={onComplete}>
+        <Button
+          size="lg"
+          disabled={isSubmitting}
+          onClick={() => void onComplete()}
+        >
           <Lock className="h-4 w-4 mr-2" />
-          Place Order
+          {isSubmitting ? "Placing order…" : "Place Order"}
         </Button>
       </div>
     </div>
@@ -525,11 +560,44 @@ function ReviewStep({
  * CheckoutPage component
  * @returns {JSX.Element} Checkout page
  */
+function buildGuestCheckoutPayload(formData) {
+  const shippingAddress = {
+    firstName: formData.firstName,
+    lastName: formData.lastName,
+    address1: formData.address,
+    city: formData.city,
+    state: formData.state,
+    postalCode: formData.zip,
+    country: "US",
+    phone: formData.phone || undefined,
+    email: formData.email,
+  };
+  const billingAddress =
+    formData.sameAsShipping !== false
+      ? { ...shippingAddress }
+      : { ...shippingAddress };
+
+  return {
+    customerEmail: formData.email,
+    shippingAddress,
+    billingAddress,
+  };
+}
+
 export function CheckoutPage() {
   const navigate = useNavigate();
-  const { items, subtotal, hasFreeShipping, clearCart } = useCart();
+  const { session } = useUser();
+  const {
+    items,
+    subtotal,
+    hasFreeShipping,
+    clearCart,
+    serverMode,
+    serverTotals,
+  } = useCart();
   const [step, setStep] = useState(1);
   const [isCompletingOrder, setIsCompletingOrder] = useState(false);
+  const [checkoutError, setCheckoutError] = useState("");
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -547,14 +615,34 @@ export function CheckoutPage() {
     sameAsShipping: true,
   });
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
+    setCheckoutError("");
     setIsCompletingOrder(true);
-    // Generate order number
-    const orderNumber = `SS-${Date.now().toString(36).toUpperCase()}`;
-    // Navigate to confirmation
-    navigate(`/order-confirmation/${orderNumber}`);
-    // Clear cart after the order is accepted
-    clearCart();
+    try {
+      if (serverMode) {
+        const idempotencyKey = crypto.randomUUID();
+        const payload = buildGuestCheckoutPayload(formData);
+        const res = await guestCheckoutApi(
+          session?.accessToken ?? null,
+          payload,
+          idempotencyKey,
+        );
+        await clearCart();
+        navigate(
+          `/order-confirmation/${encodeURIComponent(res.orderNumber)}?token=${encodeURIComponent(res.confirmationToken)}`,
+        );
+        return;
+      }
+      const orderNumber = `SS-${Date.now().toString(36).toUpperCase()}`;
+      navigate(`/order-confirmation/${orderNumber}`);
+      await clearCart();
+    } catch (e) {
+      setCheckoutError(
+        e instanceof Error ? e.message : "Checkout failed. Try again.",
+      );
+    } finally {
+      setIsCompletingOrder(false);
+    }
   };
 
   if (items.length === 0 && !isCompletingOrder) {
@@ -612,9 +700,14 @@ export function CheckoutPage() {
                   items={items}
                   subtotal={subtotal}
                   hasFreeShipping={hasFreeShipping}
+                  serverTotals={serverMode ? serverTotals : null}
+                  isSubmitting={isCompletingOrder}
                   onBack={() => setStep(2)}
                   onComplete={handleComplete}
                 />
+              )}
+              {checkoutError && (
+                <p className="text-sm text-destructive mt-4 px-1">{checkoutError}</p>
               )}
             </Card>
           </div>
@@ -625,6 +718,7 @@ export function CheckoutPage() {
               items={items}
               subtotal={subtotal}
               hasFreeShipping={hasFreeShipping}
+              serverTotals={serverMode ? serverTotals : null}
             />
           </div>
         </div>

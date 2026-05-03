@@ -18,74 +18,104 @@ import {
  */
 function HeroSection() {
   return (
-    <section className="relative bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white overflow-hidden">
-      {/* Background pattern */}
-      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTM2IDM0djItSDI0di0yaDEyek0zNiAyNHYySDI0di0yaDEyeiIvPjwvZz48L2c+PC9zdmc+')] opacity-50" />
+    <section className="relative isolate overflow-hidden bg-[linear-gradient(145deg,oklch(16%_0.04_265)_0%,oklch(20%_0.07_285)_42%,oklch(14%_0.03_40)_100%)] text-[oklch(96%_0.01_85)]">
+      <div
+        className="pointer-events-none absolute -left-32 top-0 h-[120%] w-[55%] -skew-x-6 bg-[linear-gradient(180deg,oklch(62%_0.19_38_/_0.22),transparent)] blur-3xl"
+        aria-hidden
+      />
+      <div
+        className="pointer-events-none absolute bottom-0 right-0 h-2/3 w-1/2 rounded-full bg-[radial-gradient(circle,oklch(55%_0.12_265_/_0.35),transparent_65%)]"
+        aria-hidden
+      />
 
       <div className="container-custom relative z-10">
-        <div className="grid lg:grid-cols-2 gap-12 items-center py-16 lg:py-24">
-          <div className="space-y-6">
-            <div className="inline-flex items-center gap-2 bg-primary/20 text-primary px-4 py-2 rounded-full text-sm font-medium">
-              <span className="animate-pulse-slow">🔥</span>
-              New Collection Available
+        <div className="grid items-end gap-12 py-16 lg:grid-cols-[1.05fr_0.95fr] lg:py-24">
+          <div className="animate-hero-in space-y-8">
+            <div className="inline-flex max-w-full flex-col gap-3 sm:flex-row sm:items-center">
+              <span className="inline-block h-1 w-16 shrink-0 bg-primary shadow-[0_0_24px_oklch(62%_0.19_38_/_0.5)]" />
+              <p className="font-heading text-[11px] font-bold uppercase tracking-[0.35em] text-primary">
+                Winter drop · curated edits
+              </p>
             </div>
 
-            <h1 className="font-heading text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
-              Discover Your <span className="text-primary">Perfect Style</span>
+            <h1 className="font-heading text-4xl font-extrabold leading-[0.95] tracking-tight md:text-5xl lg:text-[3.35rem]">
+              The edit
+              <br />
+              <span className="text-[oklch(88%_0.02_85)]">you actually</span>
+              <br />
+              <span className="bg-gradient-to-r from-primary to-[oklch(72%_0.16_55)] bg-clip-text text-transparent">
+                wear every week.
+              </span>
             </h1>
 
-            <p className="text-lg text-gray-300 max-w-lg">
-              Shop the latest trends with free shipping on orders over $75.
-              Quality products, competitive prices, and exceptional service.
+            <p className="max-w-md font-sans text-lg leading-relaxed text-[oklch(82%_0.02_85_/_0.88)]">
+              A tighter catalog, honest pricing, and checkout that respects your
+              time. Built for people who read labels—not just headlines.
             </p>
 
-            <div className="flex flex-wrap gap-4">
-              <Button size="xl" asChild>
+            <div className="flex flex-wrap gap-3 pt-2">
+              <Button size="xl" className="font-heading shadow-lg shadow-primary/25" asChild>
                 <Link to="/category/clothing">
-                  Shop Now
+                  Open the edit
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
               <Button
                 size="xl"
                 variant="outline"
-                className="text-white border-white hover:bg-white/10"
+                className="border-[oklch(88%_0.02_85_/_0.35)] bg-transparent font-heading text-[oklch(96%_0.01_85)] hover:bg-[oklch(96%_0.01_85_/_0.08)]"
                 asChild
               >
-                <Link to="/category/electronics">Explore Categories</Link>
+                <Link to="/category/electronics">Browse hardware</Link>
               </Button>
             </div>
 
-            {/* Trust indicators */}
-            <div className="flex flex-wrap gap-6 pt-6 text-sm text-gray-400">
-              <div className="flex items-center gap-2">
-                <Truck className="h-5 w-5 text-primary" />
-                Free Shipping
+            <dl className="grid max-w-lg grid-cols-3 gap-4 border-t border-[oklch(88%_0.02_85_/_0.12)] pt-8 text-xs font-heading uppercase tracking-widest text-[oklch(78%_0.02_85_/_0.85)]">
+              <div className="flex flex-col gap-2">
+                <dt className="flex items-center gap-2 text-primary">
+                  <Truck className="h-4 w-4" aria-hidden />
+                  Ship
+                </dt>
+                <dd className="font-sans text-[10px] font-medium normal-case tracking-normal text-[oklch(82%_0.02_85_/_0.75)]">
+                  $75+ free in the US
+                </dd>
               </div>
-              <div className="flex items-center gap-2">
-                <Shield className="h-5 w-5 text-primary" />
-                Secure Payment
+              <div className="flex flex-col gap-2">
+                <dt className="flex items-center gap-2 text-primary">
+                  <Shield className="h-4 w-4" aria-hidden />
+                  Pay
+                </dt>
+                <dd className="font-sans text-[10px] font-medium normal-case tracking-normal text-[oklch(82%_0.02_85_/_0.75)]">
+                  Encrypted checkout
+                </dd>
               </div>
-              <div className="flex items-center gap-2">
-                <RotateCcw className="h-5 w-5 text-primary" />
-                Easy Returns
+              <div className="flex flex-col gap-2">
+                <dt className="flex items-center gap-2 text-primary">
+                  <RotateCcw className="h-4 w-4" aria-hidden />
+                  Return
+                </dt>
+                <dd className="font-sans text-[10px] font-medium normal-case tracking-normal text-[oklch(82%_0.02_85_/_0.75)]">
+                  30-day window
+                </dd>
               </div>
-            </div>
+            </dl>
           </div>
 
-          <div className="hidden lg:block relative">
-            <div className="relative w-full aspect-square max-w-lg mx-auto">
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/30 to-secondary/30 rounded-3xl transform rotate-6" />
+          <div className="relative hidden lg:block">
+            <div className="relative ml-auto aspect-[4/5] w-full max-w-md">
+              <div className="absolute -inset-3 rounded-2xl border border-[oklch(88%_0.02_85_/_0.15)] bg-[oklch(22%_0.04_265_/_0.4)] backdrop-blur-sm" />
               <img
                 src="https://images.unsplash.com/photo-1483985988355-763728e1935b?w=800"
-                alt="Fashion collection"
-                className="relative z-10 w-full h-full object-cover rounded-3xl shadow-2xl"
+                alt="Curated fashion still life"
+                className="relative z-10 h-full w-full rounded-2xl object-cover shadow-2xl ring-1 ring-[oklch(88%_0.02_85_/_0.12)]"
               />
-
-              {/* Floating badge */}
-              <div className="absolute -bottom-4 -left-4 bg-white text-slate-900 p-4 rounded-xl shadow-xl z-20">
-                <p className="text-2xl font-bold text-primary">50K+</p>
-                <p className="text-sm text-gray-600">Happy Customers</p>
+              <div className="absolute -bottom-5 -right-2 z-20 max-w-[11rem] border border-[oklch(88%_0.02_85_/_0.2)] bg-[oklch(16%_0.04_265_/_0.92)] p-4 text-left shadow-xl backdrop-blur-md">
+                <p className="font-heading text-2xl font-extrabold tracking-tight text-primary">
+                  50k+
+                </p>
+                <p className="font-sans text-xs font-medium leading-snug text-[oklch(82%_0.02_85_/_0.85)]">
+                  Members who shop the edit on repeat.
+                </p>
               </div>
             </div>
           </div>
@@ -107,17 +137,21 @@ function BenefitsBar() {
   ];
 
   return (
-    <section className="py-8 border-b">
+    <section className="border-b border-border/80 bg-muted/50 py-10">
       <div className="container-custom">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
           {benefits.map((benefit, index) => (
-            <div key={index} className="flex items-center gap-3">
-              <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <benefit.icon className="h-6 w-6 text-primary" />
+            <div key={index} className="flex items-start gap-3">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-border/60 bg-card shadow-sm">
+                <benefit.icon className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <h4 className="font-semibold text-sm">{benefit.title}</h4>
-                <p className="text-xs text-muted-foreground">{benefit.desc}</p>
+                <h4 className="font-heading text-xs font-bold uppercase tracking-widest">
+                  {benefit.title}
+                </h4>
+                <p className="mt-1 font-sans text-xs text-muted-foreground">
+                  {benefit.desc}
+                </p>
               </div>
             </div>
           ))}

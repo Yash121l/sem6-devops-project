@@ -1,43 +1,36 @@
 /**
  * @fileoverview Cart Context Provider
- * Manages shopping cart state with localStorage persistence
+ * Server-backed cart when API is reachable (x-session-id + optional JWT); local fallback for offline/demo.
  */
 
-import React, { createContext, useContext, useReducer, useEffect } from "react";
+import React, {
+  createContext,
+  useContext,
+  useReducer,
+  useEffect,
+  useCallback,
+  useState,
+  useRef,
+} from "react";
 import { loadStoredJson, saveStoredJson } from "@/lib/storage";
-
-/**
- * @typedef {Object} CartItem
- * @property {number} id - Product ID
- * @property {string} name - Product name
- * @property {number} price - Product price
- * @property {string} image - Product image URL
- * @property {number} quantity - Quantity in cart
- * @property {string} [size] - Selected size
- * @property {string} [color] - Selected color
- */
-
-/**
- * @typedef {Object} CartState
- * @property {CartItem[]} items - Cart items array
- * @property {boolean} isOpen - Whether cart drawer is open
- */
+import { useUser } from "@/context/UserContext";
+import {
+  fetchServerCart,
+  addServerCartItem,
+  updateServerCartItem,
+  removeServerCartItem,
+  clearServerCart,
+  mapServerCartLine,
+} from "@/lib/storefront";
 
 const CART_STORAGE_KEY = "shopsmart_cart";
 const FREE_SHIPPING_THRESHOLD = 75;
 
-/**
- * Initial cart state
- * @type {CartState}
- */
 const initialState = {
   items: [],
   isOpen: false,
 };
 
-/**
- * Cart action types
- */
 const CartActionTypes = {
   ADD_ITEM: "ADD_ITEM",
   REMOVE_ITEM: "REMOVE_ITEM",
@@ -47,12 +40,6 @@ const CartActionTypes = {
   LOAD_CART: "LOAD_CART",
 };
 
-/**
- * Cart reducer function
- * @param {CartState} state - Current state
- * @param {Object} action - Action object
- * @returns {CartState} New state
- */
 function cartReducer(state, action) {
   switch (action.type) {
     case CartActionTypes.ADD_ITEM: {
@@ -79,6 +66,12 @@ function cartReducer(state, action) {
     }
 
     case CartActionTypes.REMOVE_ITEM: {
+      if (action.payload.cartItemId) {
+        return {
+          ...state,
+          items: state.items.filter((i) => i.cartItemId !== action.payload.cartItemId),
+        };
+      }
       return {
         ...state,
         items: state.items.filter(
@@ -93,6 +86,18 @@ function cartReducer(state, action) {
     }
 
     case CartActionTypes.UPDATE_QUANTITY: {
+      if (action.payload.cartItemId) {
+        return {
+          ...state,
+          items: state.items
+            .map((item) =>
+              item.cartItemId === action.payload.cartItemId
+                ? { ...item, quantity: Math.max(0, action.payload.quantity) }
+                : item,
+            )
+            .filter((item) => item.quantity > 0),
+        };
+      }
       return {
         ...state,
         items: state.items
@@ -126,83 +131,167 @@ function cartReducer(state, action) {
 
 const CartContext = createContext(null);
 
-/**
- * Cart Provider Component
- * @param {Object} props - Component props
- * @param {React.ReactNode} props.children - Child components
- */
 export function CartProvider({ children }) {
+  const { session } = useUser();
+  const accessToken = session?.accessToken ?? null;
   const [state, dispatch] = useReducer(cartReducer, initialState);
+  const [serverMode, setServerMode] = useState(false);
+  const [serverTotals, setServerTotals] = useState(null);
+  const [cartError, setCartError] = useState(null);
+  const mounted = useRef(true);
 
-  // Load cart from localStorage on mount
   useEffect(() => {
-    const savedCart = loadStoredJson(CART_STORAGE_KEY, []);
-    if (savedCart.length > 0) {
-      dispatch({ type: CartActionTypes.LOAD_CART, payload: savedCart });
-    }
+    return () => {
+      mounted.current = false;
+    };
   }, []);
 
-  // Save cart to localStorage on changes
+  const applyServerCart = useCallback((cart) => {
+    const lines = (cart.items || []).map(mapServerCartLine);
+    dispatch({ type: CartActionTypes.LOAD_CART, payload: lines });
+    setServerTotals({
+      subtotal: Number(cart.subtotal ?? 0),
+      taxAmount: Number(cart.taxAmount ?? 0),
+      shippingAmount: Number(cart.shippingAmount ?? 0),
+      discountAmount: Number(cart.discountAmount ?? 0),
+      total: Number(cart.total ?? 0),
+    });
+    setServerMode(true);
+    setCartError(null);
+  }, []);
+
+  const refreshServerCart = useCallback(async () => {
+    try {
+      const cart = await fetchServerCart(accessToken);
+      if (!mounted.current) {
+        return;
+      }
+      applyServerCart(cart);
+    } catch (e) {
+      if (!mounted.current) {
+        return;
+      }
+      setServerMode(false);
+      setServerTotals(null);
+      setCartError(e instanceof Error ? e.message : "Cart unavailable");
+    }
+  }, [accessToken, applyServerCart]);
+
   useEffect(() => {
-    saveStoredJson(CART_STORAGE_KEY, state.items);
-  }, [state.items]);
+    refreshServerCart();
+  }, [refreshServerCart]);
 
-  /**
-   * Add item to cart
-   * @param {CartItem} item - Item to add
-   */
-  const addItem = (item) => {
-    dispatch({ type: CartActionTypes.ADD_ITEM, payload: item });
-  };
+  useEffect(() => {
+    if (!serverMode && state.items.length === 0) {
+      const saved = loadStoredJson(CART_STORAGE_KEY, []);
+      if (saved.length > 0) {
+        dispatch({ type: CartActionTypes.LOAD_CART, payload: saved });
+      }
+    }
+  }, [serverMode]);
 
-  /**
-   * Remove item from cart
-   * @param {number} id - Product ID
-   * @param {string} [size] - Size variant
-   * @param {string} [color] - Color variant
-   */
-  const removeItem = (id, size, color) => {
-    dispatch({
-      type: CartActionTypes.REMOVE_ITEM,
-      payload: { id, size, color },
-    });
-  };
+  useEffect(() => {
+    if (!serverMode) {
+      saveStoredJson(CART_STORAGE_KEY, state.items);
+    }
+  }, [state.items, serverMode]);
 
-  /**
-   * Update item quantity
-   * @param {number} id - Product ID
-   * @param {number} quantity - New quantity
-   * @param {string} [size] - Size variant
-   * @param {string} [color] - Color variant
-   */
-  const updateQuantity = (id, quantity, size, color) => {
-    dispatch({
-      type: CartActionTypes.UPDATE_QUANTITY,
-      payload: { id, quantity, size, color },
-    });
-  };
+  const addItem = useCallback(
+    async (payload) => {
+      const variantId = payload.variantId ?? payload.defaultVariantId;
+      if (serverMode && variantId && payload.productId) {
+        try {
+          await addServerCartItem(accessToken, {
+            productId: payload.productId,
+            variantId,
+            quantity: payload.quantity || 1,
+            metadata: {
+              size: payload.size,
+              color: payload.color,
+              slug: payload.slug,
+            },
+          });
+          await refreshServerCart();
+        } catch (e) {
+          setCartError(e instanceof Error ? e.message : "Could not add to cart");
+          throw e;
+        }
+        return;
+      }
+      if (serverMode && !variantId) {
+        setCartError("This product cannot be added (no catalog variant).");
+        return;
+      }
+      dispatch({ type: CartActionTypes.ADD_ITEM, payload: payload });
+    },
+    [accessToken, refreshServerCart, serverMode],
+  );
 
-  /**
-   * Clear all items from cart
-   */
-  const clearCart = () => {
+  const removeItem = useCallback(
+    async (id, size, color, cartItemId) => {
+      if (serverMode && cartItemId) {
+        try {
+          await removeServerCartItem(accessToken, cartItemId);
+          await refreshServerCart();
+        } catch (e) {
+          setCartError(e instanceof Error ? e.message : "Could not remove item");
+        }
+        return;
+      }
+      dispatch({
+        type: CartActionTypes.REMOVE_ITEM,
+        payload: { id, size, color, cartItemId },
+      });
+    },
+    [accessToken, refreshServerCart, serverMode],
+  );
+
+  const updateQuantity = useCallback(
+    async (id, quantity, size, color, cartItemId) => {
+      if (serverMode && cartItemId) {
+        try {
+          if (quantity <= 0) {
+            await removeServerCartItem(accessToken, cartItemId);
+          } else {
+            await updateServerCartItem(accessToken, cartItemId, quantity);
+          }
+          await refreshServerCart();
+        } catch (e) {
+          setCartError(e instanceof Error ? e.message : "Could not update cart");
+        }
+        return;
+      }
+      dispatch({
+        type: CartActionTypes.UPDATE_QUANTITY,
+        payload: { id, quantity, size, color, cartItemId },
+      });
+    },
+    [accessToken, refreshServerCart, serverMode],
+  );
+
+  const clearCart = useCallback(async () => {
+    if (serverMode) {
+      try {
+        await clearServerCart(accessToken);
+        await refreshServerCart();
+      } catch {
+        dispatch({ type: CartActionTypes.CLEAR_CART });
+      }
+      return;
+    }
     dispatch({ type: CartActionTypes.CLEAR_CART });
-  };
+  }, [accessToken, refreshServerCart, serverMode]);
 
-  /**
-   * Toggle cart drawer open/closed
-   * @param {boolean} [isOpen] - Force specific state
-   */
-  const toggleCart = (isOpen) => {
+  const toggleCart = useCallback((isOpen) => {
     dispatch({ type: CartActionTypes.TOGGLE_CART, payload: isOpen });
-  };
+  }, []);
 
-  // Computed values
   const itemCount = state.items.reduce((sum, item) => sum + item.quantity, 0);
-  const subtotal = state.items.reduce(
+  const subtotalLocal = state.items.reduce(
     (sum, item) => sum + item.price * item.quantity,
     0,
   );
+  const subtotal = serverTotals ? serverTotals.subtotal : subtotalLocal;
   const amountToFreeShipping = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
   const hasFreeShipping = subtotal >= FREE_SHIPPING_THRESHOLD;
 
@@ -214,6 +303,10 @@ export function CartProvider({ children }) {
     amountToFreeShipping,
     hasFreeShipping,
     freeShippingThreshold: FREE_SHIPPING_THRESHOLD,
+    serverMode,
+    serverTotals,
+    cartError,
+    refreshCart: refreshServerCart,
     addItem,
     removeItem,
     updateQuantity,
@@ -224,11 +317,6 @@ export function CartProvider({ children }) {
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }
 
-/**
- * Hook to access cart context
- * @returns {Object} Cart context value
- * @throws {Error} If used outside CartProvider
- */
 export function useCart() {
   const context = useContext(CartContext);
   if (!context) {

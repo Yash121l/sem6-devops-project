@@ -27,18 +27,25 @@ export function ProductCard({ product, className }) {
 
   const inWishlist = isInWishlist(product.id);
 
-  const handleAddToCart = (e) => {
+  const handleAddToCart = async (e) => {
     e.preventDefault();
     e.stopPropagation();
-    addItem({
-      id: product.id,
-      slug: product.slug,
-      name: product.name,
-      price: product.price,
-      image: product.images[0],
-      quantity: 1,
-    });
-    toggleCart(true);
+    try {
+      await addItem({
+        productId: product.id,
+        variantId: product.defaultVariantId,
+        defaultVariantId: product.defaultVariantId,
+        id: product.id,
+        slug: product.slug,
+        name: product.name,
+        price: product.price,
+        image: product.images[0],
+        quantity: 1,
+      });
+      toggleCart(true);
+    } catch {
+      /* Error surfaced via cart context */
+    }
   };
 
   const handleToggleWishlist = (e) => {
