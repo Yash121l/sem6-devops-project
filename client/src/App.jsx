@@ -17,6 +17,7 @@ import CheckoutPage from "@/pages/CheckoutPage";
 import OrderConfirmationPage from "@/pages/OrderConfirmationPage";
 import WishlistPage from "@/pages/WishlistPage";
 import LoginPage from "@/pages/LoginPage";
+import ContactPage from "@/pages/ContactPage";
 
 /**
  * App component - root of the application
@@ -37,6 +38,7 @@ function App() {
                 <Route path="cart" element={<CartPage />} />
                 <Route path="wishlist" element={<WishlistPage />} />
                 <Route path="login" element={<LoginPage />} />
+                <Route path="contact" element={<ContactPage />} />
               </Route>
 
               {/* Checkout flow (minimal layout) */}

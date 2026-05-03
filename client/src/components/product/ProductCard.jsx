@@ -3,7 +3,7 @@
  * Card component for product listings with hover effects and quick actions
  */
 
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Heart, ShoppingCart, Eye } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -24,6 +24,7 @@ import { cn, formatPrice } from "@/lib/utils";
 export function ProductCard({ product, className }) {
   const { addItem, toggleCart } = useCart();
   const { isInWishlist, toggleWishlist } = useWishlist();
+  const [justAdded, setJustAdded] = useState(false);
 
   const inWishlist = isInWishlist(product.id);
 
@@ -43,6 +44,8 @@ export function ProductCard({ product, className }) {
         quantity: 1,
       });
       toggleCart(true);
+      setJustAdded(true);
+      window.setTimeout(() => setJustAdded(false), 1600);
     } catch {
       /* Error surfaced via cart context */
     }
@@ -63,7 +66,7 @@ export function ProductCard({ product, className }) {
   return (
     <Card
       className={cn(
-        "group relative overflow-hidden border-border/70 transition-shadow duration-300 hover:border-primary/25 hover:shadow-md",
+        "group relative overflow-hidden border-border/60 shadow-sm transition-[border-color,box-shadow] duration-200 ease-out hover:border-primary/20 hover:shadow-md",
         className,
       )}
     >
@@ -88,8 +91,8 @@ export function ProductCard({ product, className }) {
           )}
         </div>
 
-        {/* Quick actions */}
-        <div className="absolute right-3 top-3 flex flex-col gap-2 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100 translate-y-1">
+        {/* Quick actions — always tappable on small screens; subtle on md+ until hover */}
+        <div className="absolute right-3 top-3 flex flex-col gap-2 opacity-100 transition-all duration-200 ease-out sm:translate-y-0.5 sm:opacity-0 sm:group-hover:translate-y-0 sm:group-hover:opacity-100">
           <Button
             size="icon"
             variant="secondary"
@@ -116,22 +119,31 @@ export function ProductCard({ product, className }) {
           </Button>
         </div>
 
-        {/* Add to cart overlay */}
-        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[oklch(16%_0.04_265_/_0.85)] via-[oklch(16%_0.04_265_/_0.35)] to-transparent p-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-          <Button className="w-full shadow-lg" size="sm" onClick={handleAddToCart}>
-            <ShoppingCart className="h-4 w-4 mr-2" />
-            Add to Cart
-          </Button>
-        </div>
-
         {/* Low stock indicator */}
         {product.stock > 0 && product.stock <= 5 && (
-          <div className="absolute bottom-3 left-3 right-3 opacity-0 group-hover:opacity-0">
-            <p className="inline-block rounded border border-destructive/30 bg-background/95 px-2 py-1 font-sans text-xs font-semibold text-destructive">
-              Only {product.stock} left!
+          <div className="pointer-events-none absolute bottom-3 left-3 max-w-[min(100%,12rem)]">
+            <p className="inline-block rounded-md border border-destructive/25 bg-background/90 px-2 py-1 font-sans text-[11px] font-semibold text-destructive shadow-sm backdrop-blur-sm">
+              Only {product.stock} left
             </p>
           </div>
         )}
+      </div>
+
+      {/* Always-visible add to cart — hover-only overlays fail on touch / trackpad users */}
+      <div className="border-t border-border/60 bg-muted/40 px-3 py-3">
+        <Button
+          type="button"
+          size="sm"
+          disabled={product.stock === 0}
+          onClick={handleAddToCart}
+          className={cn(
+            "h-10 w-full font-heading transition-[transform,box-shadow] duration-200 ease-out active:scale-[0.98] disabled:opacity-50",
+            justAdded && "animate-cart-confirm ring-2 ring-primary/30 ring-offset-2 ring-offset-background",
+          )}
+        >
+          <ShoppingCart className="mr-2 h-4 w-4" aria-hidden />
+          {product.stock === 0 ? "Out of stock" : "Add to cart"}
+        </Button>
       </div>
 
       {/* Content */}

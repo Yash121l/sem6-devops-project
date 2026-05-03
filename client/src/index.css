@@ -75,6 +75,22 @@
   }
 }
 
+@keyframes cart-confirm {
+  0% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.03);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.animate-cart-confirm {
+  animation: cart-confirm 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
 @keyframes hero-in {
   from {
     opacity: 0;

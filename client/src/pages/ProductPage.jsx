@@ -197,6 +197,7 @@ export function ProductPage() {
   const [selectedColor, setSelectedColor] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState("description");
+  const [justAdded, setJustAdded] = useState(false);
 
   const { addItem, toggleCart } = useCart();
   const { isInWishlist, toggleWishlist } = useWishlist();
@@ -207,6 +208,7 @@ export function ProductPage() {
       setSelectedSize(product.sizes?.[0] || null);
       setSelectedColor(product.colors?.[0]?.name || null);
       setQuantity(1);
+      setJustAdded(false);
     }
   }, [product]);
 
@@ -249,6 +251,8 @@ export function ProductPage() {
         color: selectedColor,
       });
       toggleCart(true);
+      setJustAdded(true);
+      window.setTimeout(() => setJustAdded(false), 1600);
     } catch {
       /* cartError in context */
     }
@@ -298,8 +302,8 @@ export function ProductPage() {
           {/* Product Gallery */}
           <ProductGallery images={product.images} productName={product.name} />
 
-          {/* Product Info */}
-          <div className="space-y-6">
+          {/* Product Info — sticky on large screens while scrolling gallery / details */}
+          <div className="space-y-6 lg:sticky lg:top-24 lg:self-start">
             {/* Badges */}
             <div className="flex flex-wrap gap-2">
               {product.isNew && <Badge variant="new">New Arrival</Badge>}
@@ -409,7 +413,7 @@ export function ProductPage() {
             {/* Quantity and Add to Cart */}
             <div className="flex flex-wrap gap-4">
               {/* Quantity selector */}
-              <div className="flex items-center border rounded-md">
+              <div className="flex items-center overflow-hidden rounded-md border border-border/80">
                 <button
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
                   className="p-3 hover:bg-muted transition-colors"
@@ -434,13 +438,17 @@ export function ProductPage() {
               {/* Add to cart button */}
               <Button
                 size="xl"
-                className="flex-1"
+                className={cn(
+                  "flex-1 transition-[transform,box-shadow] duration-200 ease-out active:scale-[0.99]",
+                  justAdded &&
+                    "animate-cart-confirm ring-2 ring-primary/30 ring-offset-2 ring-offset-background",
+                )}
                 onClick={handleAddToCart}
                 disabled={product.stock === 0}
                 data-testid="product-add-to-cart"
               >
-                <ShoppingCart className="h-5 w-5 mr-2" />
-                {product.stock === 0 ? "Out of Stock" : "Add to Cart"}
+                <ShoppingCart className="mr-2 h-5 w-5" aria-hidden />
+                {product.stock === 0 ? "Out of stock" : "Add to cart"}
               </Button>
 
               {/* Wishlist button */}
