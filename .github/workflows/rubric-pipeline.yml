@@ -102,6 +102,8 @@ jobs:
     env:
       TF_IN_AUTOMATION: true
       TF_INPUT: "0"
+      TF_VAR_eks_cluster_iam_role_arn: ${{ vars.EKS_CLUSTER_IAM_ROLE_ARN }}
+      TF_VAR_eks_node_iam_role_arn: ${{ vars.EKS_NODE_IAM_ROLE_ARN }}
     steps:
       - uses: actions/checkout@v4
 

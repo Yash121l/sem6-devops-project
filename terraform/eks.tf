@@ -1,7 +1,17 @@
 # Native EKS (no terraform-aws-modules/eks) so `terraform plan` works when iam:GetRole is denied
 # on the lab role (e.g. Vocareum). Access uses deployer_access_arn from locals.tf.
+#
+# When iam:CreateRole is also denied, set var.eks_cluster_iam_role_arn and var.eks_node_iam_role_arn
+# to roles your lab pre-provisions (see docs/deployment.md).
+
+locals {
+  create_eks_cluster_iam = var.eks_cluster_iam_role_arn == ""
+  create_eks_node_iam    = var.eks_node_iam_role_arn == ""
+}
 
 resource "aws_iam_role" "eks_cluster" {
+  count = local.create_eks_cluster_iam ? 1 : 0
+
   name_prefix = "${var.project_name}-eks-cluster-"
   description = "EKS control plane role for ${local.cluster_name}"
 
@@ -18,18 +28,22 @@ resource "aws_iam_role" "eks_cluster" {
 }
 
 resource "aws_iam_role_policy_attachment" "eks_cluster_policy" {
+  count = local.create_eks_cluster_iam ? 1 : 0
+
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonEKSClusterPolicy"
-  role       = aws_iam_role.eks_cluster.name
+  role       = aws_iam_role.eks_cluster[0].name
 }
 
 resource "aws_iam_role_policy_attachment" "eks_vpc_controller" {
+  count = local.create_eks_cluster_iam ? 1 : 0
+
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonEKSVPCResourceController"
-  role       = aws_iam_role.eks_cluster.name
+  role       = aws_iam_role.eks_cluster[0].name
 }
 
 resource "aws_eks_cluster" "this" {
   name     = local.cluster_name
-  role_arn = aws_iam_role.eks_cluster.arn
+  role_arn = local.create_eks_cluster_iam ? aws_iam_role.eks_cluster[0].arn : var.eks_cluster_iam_role_arn
   version  = var.cluster_version
 
   vpc_config {
@@ -45,10 +59,10 @@ resource "aws_eks_cluster" "this" {
 
   bootstrap_self_managed_addons = false
 
-  depends_on = [
-    aws_iam_role_policy_attachment.eks_cluster_policy,
-    aws_iam_role_policy_attachment.eks_vpc_controller,
-  ]
+  depends_on = local.create_eks_cluster_iam ? [
+    aws_iam_role_policy_attachment.eks_cluster_policy[0],
+    aws_iam_role_policy_attachment.eks_vpc_controller[0],
+  ] : [module.vpc]
 
   tags = { Environment = var.environment }
 }
@@ -70,6 +84,8 @@ resource "aws_eks_access_policy_association" "deployer_admin" {
 }
 
 resource "aws_iam_role" "eks_node" {
+  count = local.create_eks_node_iam ? 1 : 0
+
   name_prefix = "${var.project_name}-eks-node-"
   description = "EKS managed node group role for ${local.cluster_name}"
 
@@ -86,18 +102,24 @@ resource "aws_iam_role" "eks_node" {
 }
 
 resource "aws_iam_role_policy_attachment" "eks_node_worker" {
+  count = local.create_eks_node_iam ? 1 : 0
+
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonEKSWorkerNodePolicy"
-  role       = aws_iam_role.eks_node.name
+  role       = aws_iam_role.eks_node[0].name
 }
 
 resource "aws_iam_role_policy_attachment" "eks_node_cni" {
+  count = local.create_eks_node_iam ? 1 : 0
+
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonEKS_CNI_Policy"
-  role       = aws_iam_role.eks_node.name
+  role       = aws_iam_role.eks_node[0].name
 }
 
 resource "aws_iam_role_policy_attachment" "eks_node_ecr" {
+  count = local.create_eks_node_iam ? 1 : 0
+
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
-  role       = aws_iam_role.eks_node.name
+  role       = aws_iam_role.eks_node[0].name
 }
 
 resource "aws_eks_addon" "vpc_cni" {
@@ -119,7 +141,7 @@ resource "aws_eks_addon" "kube_proxy" {
 resource "aws_eks_node_group" "this" {
   cluster_name    = aws_eks_cluster.this.name
   node_group_name = "${var.project_name}-ng"
-  node_role_arn   = aws_iam_role.eks_node.arn
+  node_role_arn   = local.create_eks_node_iam ? aws_iam_role.eks_node[0].arn : var.eks_node_iam_role_arn
   subnet_ids      = module.vpc.private_subnets
 
   scaling_config {
@@ -134,13 +156,14 @@ resource "aws_eks_node_group" "this" {
     max_unavailable = 1
   }
 
-  depends_on = [
-    aws_iam_role_policy_attachment.eks_node_worker,
-    aws_iam_role_policy_attachment.eks_node_cni,
-    aws_iam_role_policy_attachment.eks_node_ecr,
-    aws_eks_addon.vpc_cni,
-    aws_eks_addon.kube_proxy,
-  ]
+  depends_on = concat(
+    local.create_eks_node_iam ? [
+      aws_iam_role_policy_attachment.eks_node_worker[0],
+      aws_iam_role_policy_attachment.eks_node_cni[0],
+      aws_iam_role_policy_attachment.eks_node_ecr[0],
+    ] : [],
+    [aws_eks_addon.vpc_cni, aws_eks_addon.kube_proxy],
+  )
 
   tags = { Environment = var.environment }
 }

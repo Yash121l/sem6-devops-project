@@ -25,6 +25,17 @@ Create **Variables** (not secrets) so `terraform init` can use a shared S3 backe
 | `TF_STATE_DYNAMODB_TABLE` | `terraform-locks-shopsmart` | Output `lock_table` from bootstrap |
 | `TF_STATE_KEY` | (optional) `shopsmart/eks/terraform.tfstate` | Default used by workflow if unset |
 
+### Optional: EKS IAM roles (restricted labs, e.g. Vocareum)
+
+If Terraform fails with **`iam:CreateRole` AccessDenied** when creating `aws_iam_role.eks_cluster` / `eks_node`, your account cannot create IAM roles. Ask your instructor for **two existing role ARNs** (or create them in an account where `iam:CreateRole` is allowed), then set these **repository Variables** so CI passes `TF_VAR_*` into Terraform:
+
+| Variable | Role trust / policies (summary) |
+|----------|----------------------------------|
+| `EKS_CLUSTER_IAM_ROLE_ARN` | Trust **eks.amazonaws.com** for `sts:AssumeRole`. Attach **AmazonEKSClusterPolicy** and **AmazonEKSVPCResourceController**. |
+| `EKS_NODE_IAM_ROLE_ARN` | Trust **ec2.amazonaws.com**. Attach **AmazonEKSWorkerNodePolicy**, **AmazonEKS_CNI_Policy**, **AmazonEC2ContainerRegistryReadOnly**. |
+
+Leave both unset if your IAM user may create roles; Terraform will create them as before.
+
 Pull requests may run `terraform plan` with a **local** backend when these variables are unset (plan only, no state written to the repo). Pushes to `main` **fail fast** if the state variables are missing, so production applies never run without remote state.
 
 ## One-time: bootstrap remote state
