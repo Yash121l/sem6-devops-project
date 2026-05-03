@@ -46,18 +46,3 @@ resource "aws_s3_bucket_lifecycle_configuration" "tfstate" {
     }
   }
 }
-
-resource "aws_dynamodb_table" "tflock" {
-  name         = var.lock_table_name
-  billing_mode = "PAY_PER_REQUEST"
-  hash_key     = "LockID"
-
-  attribute {
-    name = "LockID"
-    type = "S"
-  }
-
-  tags = {
-    Name = "terraform-state-lock"
-  }
-}

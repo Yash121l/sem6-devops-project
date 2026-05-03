@@ -7,7 +7,7 @@ Full-stack e-commerce coursework project with a React storefront, NestJS backend
 - `client/`: React + Vite frontend
 - `server/`: NestJS backend
 - `terraform/`: AWS infrastructure (S3, VPC, RDS, EKS, ECR)
-- `terraform/bootstrap/`: one-time S3 + DynamoDB for Terraform remote state
+- `terraform/bootstrap/`: one-time S3 bucket for Terraform remote state (S3 native locking in the root module)
 - `k8s/`: Kubernetes manifests for the API on EKS
 - `docs/`: architecture, workflow, and deployment explanations
 - `scripts/`: idempotent setup, validation, and deployment scripts

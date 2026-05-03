@@ -2,8 +2,7 @@
 # Values come from `terraform/bootstrap` outputs after one local apply.
 # The placeholders in `terraform/versions.tf` are overridden by these settings.
 
-bucket         = "your-globally-unique-tfstate-bucket"
-key            = "shopsmart/eks/terraform.tfstate"
-region         = "us-east-1"
-dynamodb_table = "terraform-locks-shopsmart"
-encrypt        = true
+bucket = "your-globally-unique-tfstate-bucket"
+key    = "shopsmart/eks/terraform.tfstate"
+region = "us-east-1"
+encrypt = true

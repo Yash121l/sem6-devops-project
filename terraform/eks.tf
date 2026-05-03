@@ -5,8 +5,11 @@
 # to roles your lab pre-provisions (see docs/deployment.md).
 
 locals {
-  create_eks_cluster_iam = var.eks_cluster_iam_role_arn == ""
-  create_eks_node_iam    = var.eks_node_iam_role_arn == ""
+  # Trim GitHub / console paste whitespace so ARNs match and account checks work.
+  eks_cluster_role_input = trimspace(var.eks_cluster_iam_role_arn)
+  eks_node_role_input    = trimspace(var.eks_node_iam_role_arn)
+  create_eks_cluster_iam = local.eks_cluster_role_input == ""
+  create_eks_node_iam    = local.eks_node_role_input == ""
 }
 
 resource "aws_iam_role" "eks_cluster" {
@@ -43,7 +46,7 @@ resource "aws_iam_role_policy_attachment" "eks_vpc_controller" {
 
 resource "aws_eks_cluster" "this" {
   name     = local.cluster_name
-  role_arn = local.create_eks_cluster_iam ? aws_iam_role.eks_cluster[0].arn : var.eks_cluster_iam_role_arn
+  role_arn = local.create_eks_cluster_iam ? aws_iam_role.eks_cluster[0].arn : local.eks_cluster_role_input
   version  = var.cluster_version
 
   vpc_config {
@@ -139,7 +142,7 @@ resource "aws_eks_addon" "kube_proxy" {
 resource "aws_eks_node_group" "this" {
   cluster_name    = aws_eks_cluster.this.name
   node_group_name = "${var.project_name}-ng"
-  node_role_arn   = local.create_eks_node_iam ? aws_iam_role.eks_node[0].arn : var.eks_node_iam_role_arn
+  node_role_arn   = local.create_eks_node_iam ? aws_iam_role.eks_node[0].arn : local.eks_node_role_input
   subnet_ids      = module.vpc.private_subnets
 
   scaling_config {
@@ -170,4 +173,24 @@ resource "aws_eks_addon" "coredns" {
   resolve_conflicts_on_update = "OVERWRITE"
 
   depends_on = [aws_eks_node_group.this]
+}
+
+check "eks_cluster_role_in_current_account" {
+  assert {
+    condition = local.create_eks_cluster_iam || startswith(
+      local.eks_cluster_role_input,
+      "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/"
+    )
+    error_message = "EKS_CLUSTER_IAM_ROLE_ARN must be an IAM role in the same account Terraform uses (${data.aws_caller_identity.current.account_id}), e.g. arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/your-role-name. A different account causes EKS API errors."
+  }
+}
+
+check "eks_node_role_in_current_account" {
+  assert {
+    condition = local.create_eks_node_iam || startswith(
+      local.eks_node_role_input,
+      "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/"
+    )
+    error_message = "EKS_NODE_IAM_ROLE_ARN must be an IAM role in the same account (${data.aws_caller_identity.current.account_id}). If the account is wrong, CreateNodegroup fails with: Cross-account pass role is not allowed."
+  }
 }
