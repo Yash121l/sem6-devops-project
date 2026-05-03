@@ -11,7 +11,9 @@ import {
   HttpStatus,
   ParseUUIDPipe,
   Headers,
+  BadRequestException,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { CartService } from './cart.service';
 import { AddToCartDto, UpdateCartItemDto, ApplyCouponDto } from './dto/cart.dto';
@@ -21,6 +23,8 @@ import { Public } from '@common/decorators/public.decorator';
 import { ResponseMessage } from '@common/decorators/response-message.decorator';
 
 @ApiTags('cart')
+/** Higher limit: guest traffic often shares one NAT/LB IP; trust proxy must be enabled in main.ts. */
+@Throttle({ default: { limit: 2000, ttl: 60_000 } })
 @Controller('cart')
 export class CartController {
   constructor(private readonly cartService: CartService) {}
@@ -44,10 +48,13 @@ export class CartController {
   @ApiResponse({ status: 200, description: 'Item added to cart' })
   async addItem(
     @CurrentUser() user: AuthenticatedUser | undefined,
-    @Headers('x-session-id') sessionId: string,
+    @Headers('x-session-id') sessionId: string | undefined,
     @Body() addToCartDto: AddToCartDto,
   ) {
-    return this.cartService.addItem(user?.id, sessionId, addToCartDto);
+    if (!user?.id && !(sessionId && sessionId.trim())) {
+      throw new BadRequestException('Missing x-session-id header for guest cart');
+    }
+    return this.cartService.addItem(user?.id, sessionId?.trim(), addToCartDto);
   }
 
   @Put('items/:itemId')

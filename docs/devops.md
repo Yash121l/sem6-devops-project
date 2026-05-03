@@ -216,6 +216,21 @@ Full IAM and teardown notes: [`deployment.md`](./deployment.md).
 | **Blank page + MSW** | Service worker / `VITE_ENABLE_MSW`; unregister SW; app still mounts after MSW failure. |
 | **CORS in local dev** | `CORS_ORIGIN` must match Vite origin (`http://localhost:5173`). |
 | **502 / wrong API in prod** | Hit the **LoadBalancer DNS** root URL; confirm image includes `public/index.html` from client build. |
+| **POST `/cart/items` hangs or 429** | Send header **`x-session-id`** for guest carts. Behind ELB the API uses **`trust proxy`** so throttling is per real client. Pool **`min: 0`** avoids starving small RDS; use **`curl -m 30 -v`** to see timeouts vs 429. |
+
+### Verify the API on the load balancer
+
+```bash
+HOST="<paste-elb-dns>"
+curl -fsS -m 15 "http://${HOST}/api/v1/health/liveness"
+curl -fsS -m 15 "http://${HOST}/api/v1/health/readiness"
+curl -fsS -m 30 -X POST "http://${HOST}/api/v1/cart/items" \
+  -H "Content-Type: application/json" \
+  -H "x-session-id: test-session-$(date +%s)" \
+  -d '{"productId":"<uuid>","variantId":"<uuid>","quantity":1}'
+```
+
+Use `productId` / `variantId` from your seeded catalog (e.g. `GET /api/v1/products` after deploy). A **404** is immediate (unknown variant); a **hang** usually means DB connectivity, pool exhaustion, or a second replica stuck on startup DDL—this repo defaults to **one replica** while `DATABASE_SYNCHRONIZE=true` in CI.
 
 ---
 

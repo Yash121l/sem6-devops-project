@@ -19,6 +19,9 @@ async function bootstrap() {
     logger: ['error', 'warn', 'log', 'debug', 'verbose'],
   });
 
+  // One hop (ALB/NLB) so req.ip, rate limits, and logs see the real client, not the LB internal IP.
+  app.set('trust proxy', 1);
+
   const configService = app.get(ConfigService);
   const reflector = app.get(Reflector);
 
@@ -142,6 +145,11 @@ async function bootstrap() {
 
   const port = configService.get<number>('PORT', 3000);
   await app.listen(port);
+
+  // Avoid intermittent empty responses when the LB idle timeout (~60s) and Node defaults disagree.
+  const httpServer = app.getHttpServer();
+  httpServer.keepAliveTimeout = 65_000;
+  httpServer.headersTimeout = 70_000;
 
   logger.log(`Application running on port ${port}`);
   logger.log(`Environment: ${configService.get<string>('NODE_ENV')}`);

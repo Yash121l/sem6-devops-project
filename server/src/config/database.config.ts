@@ -1,6 +1,11 @@
 import { ConfigService } from '@nestjs/config';
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 
+function parsePoolInt(value: unknown, fallback: number): number {
+  const n = Number(value);
+  return Number.isFinite(n) && n >= 0 ? n : fallback;
+}
+
 export const getDatabaseConfig = (configService: ConfigService): TypeOrmModuleOptions => {
   const isProduction = configService.get<string>('NODE_ENV') === 'production';
   const databaseSsl =
@@ -39,12 +44,10 @@ export const getDatabaseConfig = (configService: ConfigService): TypeOrmModuleOp
       ? ['query', 'error', 'warn', 'migration']
       : ['error', 'warn', 'migration'],
 
-    // Connection pool settings for production scalability
+    // Connection pool — min 0 avoids opening many idle connections at boot (small RDS + multi-replica).
     extra: {
-      // Maximum clients in pool
-      max: configService.get<number>('DATABASE_POOL_SIZE', 20),
-      // Minimum clients in pool
-      min: configService.get<number>('DATABASE_POOL_MIN', 5),
+      max: parsePoolInt(configService.get('DATABASE_POOL_SIZE'), 20),
+      min: parsePoolInt(configService.get('DATABASE_POOL_MIN'), 0),
       // Connection timeout (10 seconds)
       connectionTimeoutMillis: 10000,
       // Idle timeout (30 seconds)
