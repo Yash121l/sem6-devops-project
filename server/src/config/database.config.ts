@@ -53,17 +53,21 @@ export const getDatabaseConfig = (configService: ConfigService): TypeOrmModuleOp
     retryAttempts: isProduction ? 10 : 3,
     retryDelay: 3000,
 
-    // Optional Redis cache for read-heavy workloads
-    cache: configService.get<string>('REDIS_HOST')
-      ? {
-          type: 'redis',
-          options: {
-            host: configService.get<string>('REDIS_HOST'),
-            port: configService.get<number>('REDIS_PORT', 6379),
-            password: configService.get<string>('REDIS_PASSWORD') || undefined,
-          },
-          duration: 30000,
-        }
-      : false,
+    // Optional Redis cache only when a real host is set (not empty / localhost — K8s has no Redis on loopback).
+    cache: (() => {
+      const host = (configService.get<string>('REDIS_HOST') ?? '').trim();
+      if (!host || host === 'localhost' || host === '127.0.0.1') {
+        return false;
+      }
+      return {
+        type: 'redis' as const,
+        options: {
+          host,
+          port: configService.get<number>('REDIS_PORT', 6379),
+          password: configService.get<string>('REDIS_PASSWORD') || undefined,
+        },
+        duration: 30000,
+      };
+    })(),
   };
 };

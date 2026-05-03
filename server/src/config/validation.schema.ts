@@ -16,8 +16,8 @@ export const validationSchema = Joi.object({
   DATABASE_SSL: Joi.boolean().default(false),
   DATABASE_LOGGING: Joi.boolean().default(false),
 
-  // Redis
-  REDIS_HOST: Joi.string().default('localhost'),
+  // Redis (empty = no TypeORM Redis cache; use a hostname in Docker Compose, e.g. `redis`)
+  REDIS_HOST: Joi.string().allow('').default(''),
   REDIS_PORT: Joi.number().default(6379),
   REDIS_PASSWORD: Joi.string().allow('').default(''),
 

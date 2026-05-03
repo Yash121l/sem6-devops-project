@@ -187,7 +187,8 @@ jobs:
             echo "JWT_SECRET=${JWT}"
             echo "NODE_ENV=production"
             echo "PORT=3000"
-            echo "REDIS_HOST=localhost"
+            # No in-cluster Redis: leave host empty so TypeORM does not enable Redis cache (localhost breaks pods).
+            echo "REDIS_HOST="
             echo "REDIS_PORT=6379"
             echo "REDIS_PASSWORD="
             echo "CORS_ORIGIN=http://localhost:3001"
@@ -251,7 +252,14 @@ jobs:
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         run: |
           set -euo pipefail
-          kubectl rollout status deployment/shopsmart-api -n shopsmart --timeout=600s
+          if ! kubectl rollout status deployment/shopsmart-api -n shopsmart --timeout=900s; then
+            echo "::error::Rollout failed — diagnostics below"
+            kubectl describe deployment shopsmart-api -n shopsmart || true
+            kubectl get pods -n shopsmart -o wide || true
+            kubectl get events -n shopsmart --sort-by='.lastTimestamp' | tail -40 || true
+            kubectl logs -n shopsmart -l app.kubernetes.io/name=shopsmart-api --all-containers=true --tail=120 || true
+            exit 1
+          fi
           HOST=""
           for _ in $(seq 1 60); do
             HOST=$(kubectl get svc shopsmart-api -n shopsmart -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null || true)
