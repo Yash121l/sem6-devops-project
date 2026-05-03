@@ -7,6 +7,7 @@ import { HttpExceptionFilter } from '@common/filters/http-exception.filter';
 import { TransformInterceptor } from '@common/interceptors/transform.interceptor';
 import { LoggingInterceptor } from '@common/interceptors/logging.interceptor';
 import helmet from 'helmet';
+import compression from 'compression';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
@@ -17,10 +18,9 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
   const reflector = app.get(Reflector);
 
-  // Security middleware (`compression` is CJS — inline require avoids bad `.default()` emit in dist).
+  // Security middleware (needs `esModuleInterop` in tsconfig so CJS `compression` emits a callable default in dist).
   app.use(helmet());
-  // eslint-disable-next-line @typescript-eslint/no-require-imports -- compression has no reliable ESM default in prod bundle
-  app.use(require('compression')());
+  app.use(compression());
 
   // CORS configuration
   app.enableCors({
