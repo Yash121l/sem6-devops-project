@@ -5,6 +5,8 @@ export const getDatabaseConfig = (configService: ConfigService): TypeOrmModuleOp
   const isProduction = configService.get<string>('NODE_ENV') === 'production';
   const databaseSsl =
     String(configService.get<string>('DATABASE_SSL', 'false')).toLowerCase() === 'true';
+  const databaseSynchronize =
+    String(configService.get<string>('DATABASE_SYNCHRONIZE', 'false')).toLowerCase() === 'true';
 
   return {
     type: 'postgres',
@@ -23,11 +25,11 @@ export const getDatabaseConfig = (configService: ConfigService): TypeOrmModuleOp
     entities: [__dirname + '/../**/*.entity{.ts,.js}'],
     migrations: [__dirname + '/../database/migrations/*{.ts,.js}'],
 
-    // CRITICAL: Never synchronize in production - use migrations
-    synchronize: false,
+    // Lab/EKS: set DATABASE_SYNCHRONIZE=true so RDS gets schema (no migration files in repo yet).
+    // Real production should use migrations and set this false.
+    synchronize: databaseSynchronize,
 
-    // Auto-run migrations on startup in production
-    migrationsRun: isProduction,
+    migrationsRun: false,
 
     // Auto-load entities from modules
     autoLoadEntities: true,

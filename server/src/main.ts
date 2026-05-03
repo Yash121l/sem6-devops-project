@@ -2,7 +2,7 @@ import { join } from 'path';
 import { existsSync } from 'fs';
 import * as express from 'express';
 import { NestFactory, Reflector } from '@nestjs/core';
-import { ValidationPipe, Logger } from '@nestjs/common';
+import { ValidationPipe, Logger, RequestMethod } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { NestExpressApplication } from '@nestjs/platform-express';
@@ -35,7 +35,11 @@ async function bootstrap() {
         next();
         return;
       }
-      if (req.path.startsWith('/api')) {
+      if (
+        req.path.startsWith('/api') ||
+        req.path === '/sitemap.xml' ||
+        req.path === '/robots.txt'
+      ) {
         next();
         return;
       }
@@ -63,7 +67,12 @@ async function bootstrap() {
   // Version is already in the path (`api` + `v1`). Do not enable URI versioning here: with
   // `defaultVersion` and no `@Version()` on controllers, Nest still prefixes routes (e.g.
   // `/api/v1/1/health/...`) so K8s probes on `/api/v1/health/...` return 404.
-  app.setGlobalPrefix(`${apiPrefix}/${apiVersion}`);
+  app.setGlobalPrefix(`${apiPrefix}/${apiVersion}`, {
+    exclude: [
+      { path: 'sitemap.xml', method: RequestMethod.GET },
+      { path: 'robots.txt', method: RequestMethod.GET },
+    ],
+  });
 
   // Global pipes
   app.useGlobalPipes(

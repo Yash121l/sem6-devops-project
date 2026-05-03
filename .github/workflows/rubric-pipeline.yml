@@ -191,6 +191,8 @@ jobs:
             echo "REDIS_PORT=6379"
             echo "REDIS_PASSWORD="
             echo "CORS_ORIGIN=http://localhost:3001"
+            echo "DATABASE_SYNCHRONIZE=true"
+            echo "RUN_DB_SEED=true"
           } >> "$GITHUB_ENV"
 
       - name: Install kubectl
@@ -237,6 +239,8 @@ jobs:
             --from-literal=DATABASE_USER="${DATABASE_USER}" \
             --from-literal=DATABASE_PASSWORD="${DATABASE_PASSWORD}" \
             --from-literal=DATABASE_SSL=true \
+            --from-literal=DATABASE_SYNCHRONIZE="${DATABASE_SYNCHRONIZE}" \
+            --from-literal=RUN_DB_SEED="${RUN_DB_SEED}" \
             --from-literal=JWT_SECRET="${JWT_SECRET}" \
             --from-literal=REDIS_HOST="${REDIS_HOST}" \
             --from-literal=REDIS_PORT="${REDIS_PORT}" \

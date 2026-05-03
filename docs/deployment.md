@@ -86,6 +86,8 @@ Directory: [`k8s/`](../k8s/).
 
 After a successful deploy, open the **same** `http://<load-balancer-dns>/` URL in a browser: the production image serves the **Vite storefront** from `/` and the **API** under `/api/v1` (no separate static host required).
 
+CI sets **`DATABASE_SYNCHRONIZE=true`** so TypeORM creates tables on RDS (there are no checked-in migrations yet; turn this off and add migrations before a real production account). **`RUN_DB_SEED=true`** runs the idempotent seed once when the catalog is empty (categories, products, coupons, demo users). **`/sitemap.xml`** and **`/robots.txt`** are served at the site root for SEO (not under `/api/v1`).
+
 The GitHub Actions workflow substitutes the ECR image tag (`IMAGE_PLACEHOLDER` in the Deployment) and creates the `shopsmart-api-env` secret from Terraform outputs. **`DATABASE_SSL` is set to `true` for EKS** so the API uses TLS to RDS (without it, Postgres returns `no pg_hba.conf entry … no encryption` and pods crash-loop). **Do not set `REDIS_HOST=localhost` in Kubernetes** unless you run Redis in the same pod: TypeORM would enable Redis query cache against a non-existent broker and readiness (`/api/v1/health/readiness`, DB ping) can hang until the rollout times out.
 
 If a rollout still fails, the workflow prints `kubectl describe`, events, and pod logs after `kubectl rollout status` errors.

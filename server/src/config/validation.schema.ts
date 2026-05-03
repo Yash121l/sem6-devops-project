@@ -15,6 +15,8 @@ export const validationSchema = Joi.object({
   DATABASE_PASSWORD: Joi.string().required(),
   // K8s / shell env vars are strings; accept explicit true/false for RDS TLS.
   DATABASE_SSL: Joi.string().valid('true', 'false').default('false'),
+  DATABASE_SYNCHRONIZE: Joi.string().valid('true', 'false').default('false'),
+  RUN_DB_SEED: Joi.string().valid('true', 'false').default('false'),
   DATABASE_LOGGING: Joi.boolean().default(false),
 
   // Redis (empty = no TypeORM Redis cache; use a hostname in Docker Compose, e.g. `redis`)

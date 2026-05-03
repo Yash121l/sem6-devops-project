@@ -20,6 +20,8 @@ import { PaymentsModule } from '@modules/payments/payments.module';
 import { CouponsModule } from '@modules/coupons/coupons.module';
 import { AuditModule } from '@modules/audit/audit.module';
 import { HealthModule } from '@modules/health/health.module';
+import { SeoModule } from '@modules/seo/seo.module';
+import { DbSeedService } from './database/db-seed.service';
 
 @Module({
   imports: [
@@ -66,8 +68,10 @@ import { HealthModule } from '@modules/health/health.module';
     CouponsModule,
     AuditModule,
     HealthModule,
+    SeoModule,
   ],
   providers: [
+    DbSeedService,
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
