@@ -8,6 +8,13 @@ metadata:
 spec:
   replicas: 2
   progressDeadlineSeconds: 900
+  # Default 25% surge on 2 replicas can require a third pod briefly; that stays Pending on a
+  # one-node cluster. Surge 0 + maxUnavailable 1 keeps at most 2 pods during rollouts.
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
   selector:
     matchLabels:
       app.kubernetes.io/name: shopsmart-api
