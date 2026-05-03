@@ -43,19 +43,56 @@ function sessionHeaders() {
   return { "x-session-id": getOrCreateSessionId() };
 }
 
+/** Avoid multi-minute browser hangs when the LB/pod drops packets (same as curl timing out). */
+const API_FETCH_TIMEOUT_MS = 15_000;
+const API_FETCH_MAX_ATTEMPTS = 2;
+
+function requestTimeoutSignal(millis) {
+  if (typeof AbortSignal !== "undefined" && typeof AbortSignal.timeout === "function") {
+    return AbortSignal.timeout(millis);
+  }
+  const ctrl = new AbortController();
+  globalThis.setTimeout(() => ctrl.abort(new DOMException("The operation timed out.", "TimeoutError")), millis);
+  return ctrl.signal;
+}
+
+function isRetriableNetworkError(err) {
+  if (!err) return false;
+  if (err.name === "AbortError" || err.name === "TimeoutError") return true;
+  if (err instanceof TypeError) return true;
+  if (typeof err.message === "string" && err.message.includes("Failed to fetch")) {
+    return true;
+  }
+  return false;
+}
+
 async function apiRequest(
   path,
   { body, headers, searchParams, ...options } = {},
+  attempt = 0,
 ) {
-  const response = await fetch(buildPath(path, searchParams), {
-    ...options,
-    headers: {
-      Accept: "application/json",
-      ...(body ? { "Content-Type": "application/json" } : {}),
-      ...headers,
-    },
-    body: body ? JSON.stringify(body) : undefined,
-  });
+  const url = buildPath(path, searchParams);
+  const signal = requestTimeoutSignal(API_FETCH_TIMEOUT_MS);
+
+  let response;
+  try {
+    response = await fetch(url, {
+      ...options,
+      signal,
+      headers: {
+        Accept: "application/json",
+        ...(body ? { "Content-Type": "application/json" } : {}),
+        ...headers,
+      },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+  } catch (err) {
+    if (attempt < API_FETCH_MAX_ATTEMPTS - 1 && isRetriableNetworkError(err)) {
+      await new Promise((r) => globalThis.setTimeout(r, 350 + Math.random() * 150));
+      return apiRequest(path, { body, headers, searchParams, ...options }, attempt + 1);
+    }
+    throw err;
+  }
 
   const text = await response.text();
   let payload = {};
