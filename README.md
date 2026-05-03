@@ -56,9 +56,8 @@ npm run test:ci --prefix server
 
 ## CI/CD
 
-- Fast checks: [`.github/workflows/ci.yml`](.github/workflows/ci.yml)
-- **Rubric pipeline** (tests → Terraform → ECR → EKS): [`.github/workflows/rubric-pipeline.yml`](.github/workflows/rubric-pipeline.yml)
-- Deprecated EC2 deploy (manual only): [`.github/workflows/deploy-ec2.yml`](.github/workflows/deploy-ec2.yml)
+- **Rubric pipeline** (tests → Terraform → ECR → EKS): [`.github/workflows/rubric-pipeline.yml`](.github/workflows/rubric-pipeline.yml)  
+  Terraform / ECR / EKS steps run only when `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` are set (skipped on forks with no secrets so the workflow can still pass on tests-only).
 - Dependabot: [`.github/dependabot.yml`](.github/dependabot.yml)
 
 ## Documentation

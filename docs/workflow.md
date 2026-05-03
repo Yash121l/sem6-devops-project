@@ -22,7 +22,7 @@ Frontend tests do not require a running backend. API calls are mocked through MS
 
 ## Pull requests
 
-- CI runs on every `push` and `pull_request`.
+- The [rubric pipeline workflow](../.github/workflows/rubric-pipeline.yml) runs on `push` and `pull_request` (and `workflow_dispatch`).
 - The PR template requires validation commands and a brief explanation of the change.
 - Lint failures block the pipeline.
 

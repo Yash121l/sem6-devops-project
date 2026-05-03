@@ -97,7 +97,9 @@ jobs:
     if: >
       needs.client.result == 'success' &&
       needs.server.result == 'success' &&
-      needs.e2e.result == 'success'
+      needs.e2e.result == 'success' &&
+      secrets.AWS_ACCESS_KEY_ID != '' &&
+      secrets.AWS_SECRET_ACCESS_KEY != ''
     timeout-minutes: 90
     env:
       TF_IN_AUTOMATION: true

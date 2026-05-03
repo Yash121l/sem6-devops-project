@@ -2,7 +2,7 @@
 
 This repository follows the course rubric: **tests → Terraform → Docker (ECR) → Kubernetes (EKS)** via [`.github/workflows/rubric-pipeline.yml`](../.github/workflows/rubric-pipeline.yml).
 
-The legacy EC2 + SSH workflow is deprecated and only runs on `workflow_dispatch`: [`.github/workflows/deploy-ec2.yml`](../.github/workflows/deploy-ec2.yml).
+If AWS repository secrets are not available (for example on a fork pull request), the workflow still runs **lint, tests, and builds**; the Terraform / deploy job is skipped so checks can pass without your credentials.
 
 ## GitHub Actions secrets
 
@@ -33,10 +33,12 @@ Pull requests may run `terraform plan` with a **local** backend when these varia
 
 From your laptop (AWS CLI configured):
 
+Use a **real** S3 bucket name: **lowercase** letters, numbers, and hyphens only (3–63 chars), globally unique—for example `yashlunawat-shopsmart-tfstate-7f2a`. Do not use the placeholder text from tutorials as the actual name.
+
 ```bash
 cd terraform/bootstrap
 terraform init
-terraform apply -var='state_bucket_name=YOUR-GLOBALLY-UNIQUE-TFSTATE-BUCKET' -var='aws_region=us-east-1'
+terraform apply -var='state_bucket_name=yashlunawat-shopsmart-tfstate-7f2a' -var='aws_region=us-east-1'
 ```
 
 Copy the outputs `state_bucket` and `lock_table` into the GitHub variables above. See also [`terraform/backend.hcl.example`](../terraform/backend.hcl.example) for the `terraform init -backend-config=...` flags used locally.
