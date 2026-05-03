@@ -49,7 +49,7 @@ Root module: [`terraform/`](../terraform/).
 
 - **Rubric S3 bucket**: unique name (`random` suffix), versioning on, SSE-S3 encryption, public access fully blocked.
 - **VPC + NAT**: private subnets for EKS nodes, public subnets for load balancers.
-- **EKS**: managed node group (example sizing), CoreDNS, kube-proxy, Amazon VPC CNI.
+- **EKS**: native `aws_eks_cluster` / node group / add-ons (not `terraform-aws-modules/eks`, so `terraform plan` works when your lab IAM policy denies `iam:GetRole` on the federated role).
 - **ECR**: repository for the NestJS API image.
 - **RDS PostgreSQL**: small instance in private subnets so the API can run migrations and satisfy `/api/v1/health/readiness` (database ping).
 

@@ -14,11 +14,11 @@ output "ecr_repository_name" {
 
 output "cluster_name" {
   description = "EKS cluster name for aws eks update-kubeconfig"
-  value       = module.eks.cluster_name
+  value       = aws_eks_cluster.this.name
 }
 
 output "cluster_endpoint" {
-  value = module.eks.cluster_endpoint
+  value = aws_eks_cluster.this.endpoint
 }
 
 output "aws_region" {
@@ -27,7 +27,7 @@ output "aws_region" {
 
 output "configure_kubectl" {
   description = "Example command to merge kubeconfig locally"
-  value       = "aws eks update-kubeconfig --region ${var.aws_region} --name ${module.eks.cluster_name}"
+  value       = "aws eks update-kubeconfig --region ${var.aws_region} --name ${aws_eks_cluster.this.name}"
 }
 
 output "database_host" {
