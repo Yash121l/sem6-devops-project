@@ -52,16 +52,19 @@ export function OrderConfirmationPage() {
   const showServerDetails = Boolean(summary && !loadError);
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center bg-muted/30 py-12">
-      <Card className="max-w-lg w-full mx-4 p-8 text-center">
-        <div className="w-20 h-20 rounded-full bg-success/10 flex items-center justify-center mx-auto mb-6">
-          <CheckCircle className="h-10 w-10 text-success" />
+    <div className="flex min-h-[80vh] items-center justify-center bg-muted/40 px-4 py-12">
+      <Card className="mx-auto w-full max-w-lg border-border/80 p-8 text-center shadow-xl">
+        <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-2xl border border-success/30 bg-success/10">
+          <CheckCircle className="h-10 w-10 text-success" aria-hidden />
         </div>
 
-        <h1 className="font-heading text-2xl font-bold mb-2">
-          Order Confirmed!
+        <p className="mb-2 font-heading text-[11px] font-bold uppercase tracking-[0.3em] text-primary">
+          Confirmed
+        </p>
+        <h1 className="mb-2 font-heading text-2xl font-extrabold tracking-tight">
+          Order placed
         </h1>
-        <p className="text-muted-foreground mb-6">
+        <p className="mb-6 font-sans text-muted-foreground">
           Thank you for your purchase. Your order has been received and is being
           processed.
         </p>
@@ -70,13 +73,17 @@ export function OrderConfirmationPage() {
           <p className="text-sm text-destructive mb-4">{loadError}</p>
         )}
 
-        <div className="bg-muted rounded-lg p-4 mb-6">
-          <p className="text-sm text-muted-foreground">Order Number</p>
-          <p className="text-xl font-mono font-bold">{displayOrderNumber}</p>
+        <div className="mb-6 rounded-xl border border-border/70 bg-muted/50 p-4">
+          <p className="font-heading text-[10px] font-bold uppercase tracking-[0.25em] text-muted-foreground">
+            Order number
+          </p>
+          <p className="mt-1 font-mono text-xl font-bold tracking-tight">
+            {displayOrderNumber}
+          </p>
         </div>
 
         {showServerDetails && (
-          <div className="text-left text-sm space-y-2 mb-6 border rounded-lg p-4">
+          <div className="mb-6 space-y-2 rounded-xl border border-border/70 bg-muted/30 p-4 text-left text-sm">
             <div className="flex justify-between">
               <span className="text-muted-foreground">Total</span>
               <span className="font-semibold">

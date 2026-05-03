@@ -21,17 +21,17 @@ function FreeShippingBar({ current, threshold }) {
   const remaining = Math.max(threshold - current, 0);
 
   return (
-    <div className="bg-muted p-3 rounded-lg">
+    <div className="rounded-xl border border-border/80 bg-muted/60 p-3">
       {remaining > 0 ? (
         <>
-          <p className="text-sm mb-2">
+          <p className="mb-2 text-sm">
             Add{" "}
             <span className="font-semibold text-primary">
               {formatPrice(remaining)}
             </span>{" "}
-            more for <span className="font-semibold">FREE shipping!</span>
+            more for <span className="font-semibold">free shipping</span>
           </p>
-          <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+          <div className="h-2 overflow-hidden rounded-full bg-muted">
             <div
               className="h-full bg-primary transition-all duration-300"
               style={{ width: `${progress}%` }}
@@ -39,8 +39,8 @@ function FreeShippingBar({ current, threshold }) {
           </div>
         </>
       ) : (
-        <p className="text-sm text-success font-medium">
-          🎉 You've unlocked FREE shipping!
+        <p className="text-sm font-medium text-success">
+          Free shipping unlocked on this order.
         </p>
       )}
     </div>
@@ -60,10 +60,12 @@ function CartItemRow({ item }) {
       <img
         src={item.image}
         alt={item.name}
-        className="w-20 h-20 object-cover rounded-md"
+        className="h-20 w-20 rounded-md border border-border/60 bg-muted object-cover"
       />
       <div className="flex-1 min-w-0">
-        <h4 className="font-medium text-sm truncate">{item.name}</h4>
+        <h4 className="truncate font-heading text-sm font-semibold tracking-tight">
+          {item.name}
+        </h4>
         {(item.size || item.color) && (
           <p className="text-xs text-muted-foreground mt-1">
             {item.size && `Size: ${item.size}`}
@@ -74,7 +76,7 @@ function CartItemRow({ item }) {
         <p className="text-sm font-semibold mt-1">{formatPrice(item.price)}</p>
 
         <div className="flex items-center gap-2 mt-2">
-          <div className="flex items-center border rounded-md">
+          <div className="flex items-center overflow-hidden rounded-md border border-border/80">
             <button
               onClick={() =>
                 updateQuantity(
@@ -152,12 +154,12 @@ export function CartDrawer() {
       />
 
       {/* Drawer */}
-      <div className="fixed right-0 top-0 h-full w-full max-w-md bg-background shadow-xl z-50 flex flex-col animate-slide-in">
+      <div className="fixed right-0 top-0 z-50 flex h-full w-full max-w-md flex-col border-l border-border/80 bg-background shadow-2xl animate-slide-in">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b">
-          <h2 className="font-heading text-lg font-semibold flex items-center gap-2">
-            <ShoppingBag className="h-5 w-5" />
-            Your Cart ({itemCount})
+        <div className="flex items-center justify-between border-b border-border/80 bg-muted/30 p-4 backdrop-blur-sm">
+          <h2 className="flex items-center gap-2 font-heading text-lg font-bold tracking-tight">
+            <ShoppingBag className="h-5 w-5 text-primary" aria-hidden />
+            Your cart ({itemCount})
           </h2>
           <Button variant="ghost" size="icon" onClick={() => toggleCart(false)}>
             <X className="h-5 w-5" />
@@ -183,7 +185,7 @@ export function CartDrawer() {
                 current={subtotal}
                 threshold={freeShippingThreshold}
               />
-              <div className="divide-y mt-4">
+              <div className="mt-4 divide-y divide-border/80">
                 {items.map((item, index) => (
                   <CartItemRow
                     key={
@@ -200,7 +202,7 @@ export function CartDrawer() {
 
         {/* Footer */}
         {items.length > 0 && (
-          <div className="border-t p-4 space-y-4">
+          <div className="space-y-4 border-t border-border/80 bg-muted/20 p-4">
             <div className="flex justify-between text-sm">
               <span>Subtotal</span>
               <span className="font-semibold">{formatPrice(subtotal)}</span>

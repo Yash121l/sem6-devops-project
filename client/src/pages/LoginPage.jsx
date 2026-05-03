@@ -54,17 +54,28 @@ export function LoginPage() {
   };
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center py-12 px-4">
-      <Card className="w-full max-w-md p-8">
-        <div className="text-center mb-8">
-          <Link to="/" className="inline-flex items-center gap-2 mb-4">
-            <Package className="h-8 w-8 text-primary" />
-            <span className="font-heading text-2xl font-bold">ShopSmart</span>
+    <div className="relative flex min-h-[80vh] items-center justify-center px-4 py-12">
+      <div
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,oklch(62%_0.19_38_/_0.12),transparent)]"
+        aria-hidden
+      />
+      <Card className="relative w-full max-w-md border-border/80 p-8 shadow-xl">
+        <div className="mb-8 text-center">
+          <Link
+            to="/"
+            className="group mb-4 inline-flex items-center justify-center gap-2"
+          >
+            <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-md transition-transform group-hover:-rotate-6">
+              <Package className="h-6 w-6" aria-hidden />
+            </span>
+            <span className="font-heading text-2xl font-extrabold tracking-tight">
+              Shop<span className="text-primary">Smart</span>
+            </span>
           </Link>
-          <h1 className="text-xl font-semibold">
-            {isLogin ? "Welcome back!" : "Create your account"}
+          <h1 className="font-heading text-xl font-bold tracking-tight">
+            {isLogin ? "Welcome back" : "Create your account"}
           </h1>
-          <p className="text-muted-foreground text-sm mt-1">
+          <p className="mt-1 font-sans text-sm text-muted-foreground">
             {isLogin
               ? "Sign in to continue shopping"
               : "Join us and start shopping today"}

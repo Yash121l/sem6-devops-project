@@ -29,7 +29,13 @@ export class Order extends BaseEntity {
   customerEmail: string | null;
 
   @Index({ unique: true })
-  @Column({ name: 'confirmation_token', type: 'varchar', length: 128, nullable: true, unique: true })
+  @Column({
+    name: 'confirmation_token',
+    type: 'varchar',
+    length: 128,
+    nullable: true,
+    unique: true,
+  })
   confirmationToken: string | null;
 
   @Column({ name: 'coupon_id', type: 'uuid', nullable: true })

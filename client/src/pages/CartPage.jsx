@@ -14,6 +14,8 @@ import {
   Tag,
   Truck,
   ArrowRight,
+  Shield,
+  CreditCard,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,20 +34,20 @@ function FreeShippingProgress({ current, threshold }) {
   const remaining = Math.max(threshold - current, 0);
 
   return (
-    <div className="bg-muted p-4 rounded-lg">
+    <div className="rounded-xl border border-border/80 bg-muted/60 p-4">
       {remaining > 0 ? (
         <>
-          <div className="flex items-center gap-2 mb-2">
-            <Truck className="h-5 w-5 text-primary" />
+          <div className="mb-2 flex items-center gap-2">
+            <Truck className="h-5 w-5 text-primary" aria-hidden />
             <p className="text-sm">
               Add{" "}
               <span className="font-semibold text-primary">
                 {formatPrice(remaining)}
               </span>{" "}
-              more for <span className="font-semibold">FREE shipping!</span>
+              more for <span className="font-semibold">free shipping</span>
             </p>
           </div>
-          <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+          <div className="h-2 overflow-hidden rounded-full bg-muted">
             <div
               className="h-full bg-primary transition-all duration-500"
               style={{ width: `${progress}%` }}
@@ -54,9 +56,9 @@ function FreeShippingProgress({ current, threshold }) {
         </>
       ) : (
         <div className="flex items-center gap-2 text-success">
-          <Truck className="h-5 w-5" />
+          <Truck className="h-5 w-5 shrink-0" aria-hidden />
           <p className="text-sm font-medium">
-            🎉 You've unlocked FREE shipping!
+            You&apos;ve unlocked free shipping on this order.
           </p>
         </div>
       )}
@@ -104,7 +106,7 @@ function CartItem({ item }) {
         </div>
 
         <div className="flex items-center justify-between mt-4">
-          <div className="flex items-center border rounded-md">
+          <div className="flex items-center overflow-hidden rounded-md border border-border/80">
             <button
               onClick={() =>
                 updateQuantity(
@@ -189,8 +191,13 @@ function OrderSummary({ subtotal, hasFreeShipping, serverTotals }) {
   };
 
   return (
-    <Card className="p-6 sticky top-24">
-      <h2 className="font-heading text-xl font-bold mb-4">Order Summary</h2>
+    <Card className="sticky top-24 border-border/80 p-6 shadow-sm">
+      <p className="mb-1 font-heading text-[11px] font-bold uppercase tracking-[0.25em] text-primary">
+        Before you pay
+      </p>
+      <h2 className="mb-4 font-heading text-xl font-extrabold tracking-tight">
+        Order summary
+      </h2>
 
       {!useServer && (
         <div className="mb-6">
@@ -259,9 +266,15 @@ function OrderSummary({ subtotal, hasFreeShipping, serverTotals }) {
       </Button>
 
       {/* Trust badges */}
-      <div className="flex items-center justify-center gap-4 mt-4 text-xs text-muted-foreground">
-        <span>🔒 Secure Checkout</span>
-        <span>💳 All cards accepted</span>
+      <div className="mt-4 flex items-center justify-center gap-4 text-xs text-muted-foreground">
+        <span className="inline-flex items-center gap-1.5">
+          <Shield className="h-3.5 w-3.5 text-primary" aria-hidden />
+          Secure checkout
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <CreditCard className="h-3.5 w-3.5 text-primary" aria-hidden />
+          Major cards accepted
+        </span>
       </div>
     </Card>
   );
@@ -324,7 +337,7 @@ export function CartPage() {
   return (
     <div>
       {/* Breadcrumb */}
-      <div className="bg-muted py-4">
+      <div className="border-b border-border/80 bg-background/90 py-4 backdrop-blur-sm">
         <div className="container-custom">
           <nav className="flex items-center gap-2 text-sm">
             <Link to="/" className="text-muted-foreground hover:text-primary">
@@ -337,11 +350,16 @@ export function CartPage() {
       </div>
 
       <div className="container-custom py-8">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="font-heading text-2xl lg:text-3xl font-bold">
-            Shopping Cart ({items.length}{" "}
-            {items.length === 1 ? "item" : "items"})
-          </h1>
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <p className="mb-2 font-heading text-[11px] font-bold uppercase tracking-[0.3em] text-primary">
+              Bag
+            </p>
+            <h1 className="font-heading text-2xl font-extrabold tracking-tight lg:text-3xl">
+              Shopping cart ({items.length}{" "}
+              {items.length === 1 ? "item" : "items"})
+            </h1>
+          </div>
           <Button
             variant="ghost"
             className="text-destructive"

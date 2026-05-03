@@ -170,12 +170,15 @@ function CategoriesSection({ categories }) {
   return (
     <section className="py-12 lg:py-16">
       <div className="container-custom">
-        <div className="text-center mb-10">
-          <h2 className="font-heading text-3xl font-bold mb-3">
-            Shop by Category
+        <div className="mb-10 text-center">
+          <p className="mb-3 font-heading text-[11px] font-bold uppercase tracking-[0.3em] text-primary">
+            Browse
+          </p>
+          <h2 className="mb-3 font-heading text-3xl font-extrabold tracking-tight">
+            Shop by category
           </h2>
-          <p className="text-muted-foreground max-w-xl mx-auto">
-            Explore our wide range of products across various categories
+          <p className="mx-auto max-w-xl font-sans text-muted-foreground">
+            Tight edits across home, style, and gear—pick a lane and go deep.
           </p>
         </div>
 
@@ -193,10 +196,10 @@ function CategoriesSection({ categories }) {
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
               <div className="absolute bottom-0 left-0 right-0 p-4 lg:p-6">
-                <h3 className="font-heading text-lg lg:text-xl font-semibold text-white mb-1">
+                <h3 className="mb-1 font-heading text-lg font-bold tracking-tight text-white lg:text-xl">
                   {category.name}
                 </h3>
-                <p className="text-sm text-gray-300">
+                <p className="font-sans text-sm text-white/80">
                   {category.productCount} products
                 </p>
               </div>
@@ -214,17 +217,27 @@ function ConnectionPill({ source, error }) {
   return (
     <div className="container-custom pt-6">
       <div
-        className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm ${
+        className={`inline-flex max-w-full items-center gap-2 rounded-lg border px-4 py-2.5 text-sm shadow-sm ${
           isLive
-            ? "bg-emerald-50 text-emerald-700"
-            : "bg-amber-50 text-amber-700"
+            ? "border-success/30 bg-success/10 text-foreground"
+            : "border-border/80 bg-card text-muted-foreground"
         }`}
       >
         <span
-          className={`h-2 w-2 rounded-full ${isLive ? "bg-emerald-500" : "bg-amber-500"}`}
+          className={`h-2 w-2 shrink-0 rounded-full ${isLive ? "bg-success" : "bg-primary/60"}`}
+          aria-hidden
         />
-        {isLive ? "Live catalog connected" : "Using demo catalog fallback"}
-        {error ? <span className="hidden md:inline">({error})</span> : null}
+        <span className="font-heading font-semibold tracking-tight">
+          {isLive ? "Live catalog" : "Demo catalog"}
+        </span>
+        <span className="font-sans text-muted-foreground">
+          {isLive ? "Connected to the API." : "Fallback data while offline."}
+        </span>
+        {error ? (
+          <span className="hidden truncate font-sans text-xs md:inline">
+            ({error})
+          </span>
+        ) : null}
       </div>
     </div>
   );
@@ -243,10 +256,19 @@ function ProductSection({
   return (
     <section className="py-12 lg:py-16">
       <div className="container-custom">
-        <div className="flex items-end justify-between mb-8">
+        <div className="mb-8 flex items-end justify-between gap-4">
           <div>
-            <h2 className="font-heading text-3xl font-bold mb-2">{title}</h2>
-            {subtitle && <p className="text-muted-foreground">{subtitle}</p>}
+            <p className="mb-2 font-heading text-[11px] font-bold uppercase tracking-[0.3em] text-primary">
+              The edit
+            </p>
+            <h2 className="mb-2 font-heading text-3xl font-extrabold tracking-tight">
+              {title}
+            </h2>
+            {subtitle && (
+              <p className="max-w-lg font-sans text-muted-foreground">
+                {subtitle}
+              </p>
+            )}
           </div>
           {viewAllLink && (
             <Button variant="outline" asChild>
@@ -294,21 +316,27 @@ function TestimonialsSection() {
   ];
 
   return (
-    <section className="py-12 lg:py-16 bg-muted">
+    <section className="border-y border-border/80 bg-muted/40 py-12 lg:py-16">
       <div className="container-custom">
-        <div className="text-center mb-10">
-          <h2 className="font-heading text-3xl font-bold mb-3">
-            What Our Customers Say
+        <div className="mb-10 text-center">
+          <p className="mb-3 font-heading text-[11px] font-bold uppercase tracking-[0.3em] text-primary">
+            Voices
+          </p>
+          <h2 className="mb-3 font-heading text-3xl font-extrabold tracking-tight">
+            What customers say
           </h2>
-          <p className="text-muted-foreground">
-            Join thousands of satisfied shoppers
+          <p className="font-sans text-muted-foreground">
+            Real feedback from people who shop the edit.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid gap-6 md:grid-cols-3">
           {testimonials.map((testimonial, index) => (
-            <div key={index} className="bg-background p-6 rounded-xl shadow-sm">
-              <div className="flex text-yellow-400 mb-4">
+            <div
+              key={index}
+              className="rounded-xl border border-border/80 bg-card p-6 shadow-sm"
+            >
+              <div className="mb-4 flex text-primary">
                 {[...Array(testimonial.rating)].map((_, i) => (
                   <svg
                     key={i}
@@ -319,36 +347,52 @@ function TestimonialsSection() {
                   </svg>
                 ))}
               </div>
-              <p className="text-muted-foreground mb-4">"{testimonial.text}"</p>
+              <p className="mb-4 font-sans text-muted-foreground">
+                &ldquo;{testimonial.text}&rdquo;
+              </p>
               <div className="flex items-center gap-3">
                 <img
                   src={testimonial.avatar}
                   alt={testimonial.name}
-                  className="h-10 w-10 rounded-full"
+                  className="h-10 w-10 rounded-full ring-2 ring-border/60"
                 />
-                <span className="font-medium">{testimonial.name}</span>
+                <span className="font-heading font-semibold tracking-tight">
+                  {testimonial.name}
+                </span>
               </div>
             </div>
           ))}
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-12 text-center">
+        <div className="mt-12 grid grid-cols-2 gap-6 text-center md:grid-cols-4">
           <div>
-            <p className="text-3xl lg:text-4xl font-bold text-primary">50K+</p>
-            <p className="text-muted-foreground">Happy Customers</p>
+            <p className="font-heading text-3xl font-extrabold text-primary lg:text-4xl">
+              50K+
+            </p>
+            <p className="font-sans text-sm text-muted-foreground">
+              Happy customers
+            </p>
           </div>
           <div>
-            <p className="text-3xl lg:text-4xl font-bold text-primary">10K+</p>
-            <p className="text-muted-foreground">Products</p>
+            <p className="font-heading text-3xl font-extrabold text-primary lg:text-4xl">
+              10K+
+            </p>
+            <p className="font-sans text-sm text-muted-foreground">Products</p>
           </div>
           <div>
-            <p className="text-3xl lg:text-4xl font-bold text-primary">99%</p>
-            <p className="text-muted-foreground">Satisfaction Rate</p>
+            <p className="font-heading text-3xl font-extrabold text-primary lg:text-4xl">
+              99%
+            </p>
+            <p className="font-sans text-sm text-muted-foreground">
+              Satisfaction rate
+            </p>
           </div>
           <div>
-            <p className="text-3xl lg:text-4xl font-bold text-primary">24/7</p>
-            <p className="text-muted-foreground">Customer Support</p>
+            <p className="font-heading text-3xl font-extrabold text-primary lg:text-4xl">
+              24/7
+            </p>
+            <p className="font-sans text-sm text-muted-foreground">Support</p>
           </div>
         </div>
       </div>
@@ -372,31 +416,33 @@ function NewsletterSection() {
   };
 
   return (
-    <section className="py-12 lg:py-16 bg-primary text-primary-foreground">
+    <section className="bg-primary py-12 text-primary-foreground lg:py-16">
       <div className="container-custom text-center">
-        <h2 className="font-heading text-3xl font-bold mb-3">
-          Get 10% Off Your First Order
+        <p className="mb-3 font-heading text-[11px] font-bold uppercase tracking-[0.3em] text-primary-foreground/80">
+          First order
+        </p>
+        <h2 className="mb-3 font-heading text-3xl font-extrabold tracking-tight">
+          10% off when you join the list
         </h2>
-        <p className="mb-6 max-w-xl mx-auto opacity-90">
-          Subscribe to our newsletter for exclusive deals, new arrivals, and
-          insider-only discounts.
+        <p className="mx-auto mb-6 max-w-xl font-sans text-primary-foreground/90">
+          Drops, restocks, and members-only codes—no spam, just the edit.
         </p>
 
         {subscribed ? (
-          <p className="text-lg font-medium">
-            🎉 Thanks for subscribing! Check your email for your discount code.
+          <p className="font-heading text-lg font-semibold tracking-tight">
+            You&apos;re in. Check your inbox for the code.
           </p>
         ) : (
           <form
             onSubmit={handleSubmit}
-            className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto"
+            className="mx-auto flex max-w-md flex-col gap-3 sm:flex-row"
           >
             <input
               type="email"
-              placeholder="Enter your email"
+              placeholder="Email address"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="flex-1 px-4 py-3 rounded-lg text-foreground bg-white"
+              className="flex-1 rounded-lg border border-primary-foreground/25 bg-background px-4 py-3 text-foreground shadow-inner placeholder:text-muted-foreground"
               required
             />
             <Button type="submit" variant="secondary" size="lg">

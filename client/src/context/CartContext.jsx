@@ -181,6 +181,9 @@ export function CartProvider({ children }) {
     refreshServerCart();
   }, [refreshServerCart]);
 
+  // Hydrate local cart from storage when leaving server-backed mode (or on first local load).
+  // Do not depend on `state.items.length`: when the user clears the cart we must not re-read
+  // storage in the same pass and accidentally restore lines before persistence runs.
   useEffect(() => {
     if (!serverMode && state.items.length === 0) {
       const saved = loadStoredJson(CART_STORAGE_KEY, []);
@@ -188,6 +191,7 @@ export function CartProvider({ children }) {
         dispatch({ type: CartActionTypes.LOAD_CART, payload: saved });
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- see comment above
   }, [serverMode]);
 
   useEffect(() => {

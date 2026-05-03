@@ -61,14 +61,18 @@ export function ProductCard({ product, className }) {
   };
 
   return (
-    <Card className={cn("group relative overflow-hidden", className)}>
-      {/* Image container */}
-      <div className="relative aspect-square overflow-hidden bg-gray-100">
+    <Card
+      className={cn(
+        "group relative overflow-hidden border-border/70 transition-shadow duration-300 hover:border-primary/25 hover:shadow-md",
+        className,
+      )}
+    >
+      <div className="relative aspect-square overflow-hidden bg-muted">
         <Link to={`/product/${product.slug}`}>
           <img
             src={product.images[0]}
             alt={product.name}
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.04]"
             loading="lazy"
           />
         </Link>
@@ -85,11 +89,11 @@ export function ProductCard({ product, className }) {
         </div>
 
         {/* Quick actions */}
-        <div className="absolute top-3 right-3 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="absolute right-3 top-3 flex flex-col gap-2 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100 translate-y-1">
           <Button
             size="icon"
             variant="secondary"
-            className="h-9 w-9 rounded-full shadow-md"
+            className="h-9 w-9 rounded-lg border border-border/60 shadow-sm backdrop-blur-sm"
             onClick={handleToggleWishlist}
             aria-label={inWishlist ? "Remove from wishlist" : "Add to wishlist"}
           >
@@ -103,7 +107,7 @@ export function ProductCard({ product, className }) {
           <Button
             size="icon"
             variant="secondary"
-            className="h-9 w-9 rounded-full shadow-md"
+            className="h-9 w-9 rounded-lg border border-border/60 shadow-sm backdrop-blur-sm"
             asChild
           >
             <Link to={`/product/${product.slug}`} aria-label="Quick view">
@@ -113,8 +117,8 @@ export function ProductCard({ product, className }) {
         </div>
 
         {/* Add to cart overlay */}
-        <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
-          <Button className="w-full" size="sm" onClick={handleAddToCart}>
+        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[oklch(16%_0.04_265_/_0.85)] via-[oklch(16%_0.04_265_/_0.35)] to-transparent p-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+          <Button className="w-full shadow-lg" size="sm" onClick={handleAddToCart}>
             <ShoppingCart className="h-4 w-4 mr-2" />
             Add to Cart
           </Button>
@@ -123,7 +127,7 @@ export function ProductCard({ product, className }) {
         {/* Low stock indicator */}
         {product.stock > 0 && product.stock <= 5 && (
           <div className="absolute bottom-3 left-3 right-3 opacity-0 group-hover:opacity-0">
-            <p className="text-xs text-destructive font-medium bg-white/90 rounded px-2 py-1 inline-block">
+            <p className="inline-block rounded border border-destructive/30 bg-background/95 px-2 py-1 font-sans text-xs font-semibold text-destructive">
               Only {product.stock} left!
             </p>
           </div>
@@ -131,12 +135,12 @@ export function ProductCard({ product, className }) {
       </div>
 
       {/* Content */}
-      <div className="p-4">
+      <div className="border-t border-border/50 p-4">
         <Link to={`/product/${product.slug}`} className="block">
-          <p className="text-xs text-muted-foreground mb-1">
+          <p className="mb-1 font-heading text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
             {product.categoryName}
           </p>
-          <h3 className="font-medium text-sm line-clamp-2 group-hover:text-primary transition-colors">
+          <h3 className="line-clamp-2 font-heading text-sm font-semibold leading-snug tracking-tight transition-colors group-hover:text-primary">
             {product.name}
           </h3>
         </Link>
@@ -148,21 +152,20 @@ export function ProductCard({ product, className }) {
           className="mt-2"
         />
 
-        <div className="mt-2 flex items-center gap-2">
-          <span className="font-semibold text-lg">
+        <div className="mt-2 flex items-baseline gap-2">
+          <span className="font-heading text-lg font-bold tracking-tight">
             {formatPrice(product.price)}
           </span>
           {product.originalPrice && (
-            <span className="text-sm text-muted-foreground line-through">
+            <span className="font-sans text-sm text-muted-foreground line-through">
               {formatPrice(product.originalPrice)}
             </span>
           )}
         </div>
 
-        {/* Social proof */}
         {product.soldThisWeek > 100 && (
-          <p className="text-xs text-muted-foreground mt-2">
-            🔥 {product.soldThisWeek.toLocaleString()} sold this week
+          <p className="mt-2 font-heading text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+            {product.soldThisWeek.toLocaleString()} sold this week
           </p>
         )}
       </div>

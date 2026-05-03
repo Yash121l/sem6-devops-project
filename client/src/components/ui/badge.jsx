@@ -11,22 +11,22 @@ import { cn } from "@/lib/utils";
  * Badge variants configuration
  */
 const badgeVariants = cva(
-  "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+  "inline-flex items-center rounded-md border px-2 py-0.5 font-heading text-[0.65rem] font-bold uppercase tracking-[0.12em] transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
   {
     variants: {
       variant: {
         default:
-          "border-transparent bg-primary text-primary-foreground hover:bg-primary/80",
+          "border-transparent bg-primary text-primary-foreground hover:bg-primary/85",
         secondary:
-          "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
+          "border-border/80 bg-muted text-foreground hover:bg-muted/80",
         destructive:
-          "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
+          "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/85",
         success: "border-transparent bg-success text-success-foreground",
         warning: "border-transparent bg-warning text-warning-foreground",
-        outline: "text-foreground",
-        sale: "border-transparent bg-red-500 text-white",
-        new: "border-transparent bg-emerald-500 text-white",
-        bestseller: "border-transparent bg-amber-500 text-white",
+        outline: "border-border/80 bg-transparent text-foreground",
+        sale: "border-destructive/40 bg-destructive/10 text-destructive",
+        new: "border-primary/50 bg-primary/10 text-primary",
+        bestseller: "border-amber-600/40 bg-amber-500/10 text-amber-950",
       },
     },
     defaultVariants: {

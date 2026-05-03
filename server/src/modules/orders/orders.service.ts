@@ -21,7 +21,11 @@ import {
 } from './dto/order.dto';
 import { PaginationDto } from '@common/dto/pagination.dto';
 import { paginate, PaginatedResult } from '@common/utils/pagination.util';
-import { generateOrderNumber, generateTransactionId, generateConfirmationToken } from '@common/utils/string.util';
+import {
+  generateOrderNumber,
+  generateTransactionId,
+  generateConfirmationToken,
+} from '@common/utils/string.util';
 import { OrderStatus, PaymentStatus, UserRole, PaymentMethod } from '@common/enums';
 import { CartService } from '@modules/cart/cart.service';
 import { InventoryService } from '@modules/inventory/inventory.service';

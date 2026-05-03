@@ -1,6 +1,6 @@
 /**
  * @fileoverview Footer component
- * Site footer with links, newsletter, and trust badges
+ * Site footer — editorial / catalog strip (matches global theme)
  */
 
 import React, { useState } from "react";
@@ -22,10 +22,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-/**
- * Footer component
- * @returns {JSX.Element} Footer element
- */
 export function Footer() {
   const [email, setEmail] = useState("");
   const [subscribed, setSubscribed] = useState(false);
@@ -40,238 +36,172 @@ export function Footer() {
 
   const currentYear = new Date().getFullYear();
 
+  const linkClass =
+    "text-secondary-foreground/80 transition-colors hover:text-primary";
+
   return (
-    <footer className="bg-gray-900 text-gray-300">
-      {/* Trust badges */}
-      <div className="border-b border-gray-800">
-        <div className="container-custom py-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-            <div className="flex flex-col items-center gap-2">
-              <Truck className="h-8 w-8 text-primary" />
-              <h4 className="font-semibold text-white">Free Shipping</h4>
-              <p className="text-sm">On orders over $75</p>
-            </div>
-            <div className="flex flex-col items-center gap-2">
-              <RotateCcw className="h-8 w-8 text-primary" />
-              <h4 className="font-semibold text-white">Easy Returns</h4>
-              <p className="text-sm">30-day return policy</p>
-            </div>
-            <div className="flex flex-col items-center gap-2">
-              <ShieldCheck className="h-8 w-8 text-primary" />
-              <h4 className="font-semibold text-white">Secure Checkout</h4>
-              <p className="text-sm">SSL encrypted payments</p>
-            </div>
-            <div className="flex flex-col items-center gap-2">
-              <CreditCard className="h-8 w-8 text-primary" />
-              <h4 className="font-semibold text-white">Payment Options</h4>
-              <p className="text-sm">All major cards accepted</p>
-            </div>
+    <footer className="border-t border-border/80 bg-secondary text-secondary-foreground">
+      <div className="border-b border-[oklch(88%_0.02_85_/_0.12)]">
+        <div className="container-custom py-10">
+          <div className="grid grid-cols-2 gap-8 text-center md:grid-cols-4 md:gap-6">
+            {[
+              { icon: Truck, title: "Free shipping", desc: "Orders $75+" },
+              { icon: RotateCcw, title: "Returns", desc: "30-day window" },
+              { icon: ShieldCheck, title: "Secure", desc: "Encrypted checkout" },
+              { icon: CreditCard, title: "Payments", desc: "Major cards" },
+            ].map(({ icon: Icon, title, desc }) => (
+              <div key={title} className="flex flex-col items-center gap-2">
+                <div className="flex h-11 w-11 items-center justify-center rounded-lg border border-[oklch(88%_0.02_85_/_0.15)] bg-[oklch(22%_0.04_265_/_0.35)]">
+                  <Icon className="h-5 w-5 text-primary" aria-hidden />
+                </div>
+                <h4 className="font-heading text-[11px] font-bold uppercase tracking-[0.2em]">
+                  {title}
+                </h4>
+                <p className="font-sans text-xs text-secondary-foreground/65">
+                  {desc}
+                </p>
+              </div>
+            ))}
           </div>
         </div>
       </div>
 
-      {/* Main footer content */}
-      <div className="container-custom py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {/* Company info */}
+      <div className="container-custom py-14">
+        <div className="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-4 lg:gap-12">
           <div>
-            <Link to="/" className="flex items-center gap-2 mb-4">
-              <Package className="h-6 w-6 text-primary" />
-              <span className="font-heading text-xl font-bold text-white">
-                ShopSmart
+            <Link
+              to="/"
+              className="group mb-5 inline-flex items-center gap-2 font-heading text-xl font-extrabold tracking-tight text-secondary-foreground"
+            >
+              <span className="flex h-9 w-9 items-center justify-center rounded-md bg-primary text-primary-foreground shadow-sm transition-transform group-hover:-rotate-6">
+                <Package className="h-5 w-5" aria-hidden />
               </span>
+              Shop<span className="text-primary">Smart</span>
             </Link>
-            <p className="text-sm mb-4">
-              Your one-stop destination for quality products at great prices.
-              Shop with confidence and enjoy fast, free shipping.
+            <p className="mb-5 max-w-xs font-sans text-sm leading-relaxed text-secondary-foreground/75">
+              Curated products, straight pricing, and a checkout that does not waste
+              your afternoon.
             </p>
-            <div className="space-y-2 text-sm">
+            <div className="space-y-2.5 font-sans text-sm text-secondary-foreground/80">
               <p className="flex items-center gap-2">
-                <MapPin className="h-4 w-4" />
+                <MapPin className="h-4 w-4 shrink-0 text-primary" aria-hidden />
                 123 Commerce St, New York, NY 10001
               </p>
               <p className="flex items-center gap-2">
-                <Phone className="h-4 w-4" />
+                <Phone className="h-4 w-4 shrink-0 text-primary" aria-hidden />
                 (555) 123-4567
               </p>
               <p className="flex items-center gap-2">
-                <Mail className="h-4 w-4" />
+                <Mail className="h-4 w-4 shrink-0 text-primary" aria-hidden />
                 hello@shopsmart.com
               </p>
             </div>
           </div>
 
-          {/* Quick links */}
           <div>
-            <h4 className="font-semibold text-white mb-4">Quick Links</h4>
-            <ul className="space-y-2 text-sm">
-              <li>
-                <Link
-                  to="/category/electronics"
-                  className="hover:text-primary transition-colors"
-                >
-                  New Arrivals
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/category/clothing"
-                  className="hover:text-primary transition-colors"
-                >
-                  Best Sellers
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/category/accessories"
-                  className="hover:text-primary transition-colors"
-                >
-                  Sale Items
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/about"
-                  className="hover:text-primary transition-colors"
-                >
-                  About Us
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/contact"
-                  className="hover:text-primary transition-colors"
-                >
-                  Contact
-                </Link>
-              </li>
+            <h4 className="mb-4 font-heading text-[11px] font-bold uppercase tracking-[0.25em] text-primary">
+              Explore
+            </h4>
+            <ul className="space-y-2.5 font-sans text-sm">
+              {[
+                ["/category/electronics", "New arrivals"],
+                ["/category/clothing", "Best sellers"],
+                ["/category/accessories", "Sale"],
+                ["/about", "About"],
+                ["/contact", "Contact"],
+              ].map(([to, label]) => (
+                <li key={to}>
+                  <Link to={to} className={linkClass}>
+                    {label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
-          {/* Customer service */}
           <div>
-            <h4 className="font-semibold text-white mb-4">Customer Service</h4>
-            <ul className="space-y-2 text-sm">
-              <li>
-                <Link
-                  to="/faq"
-                  className="hover:text-primary transition-colors"
-                >
-                  FAQ
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/shipping"
-                  className="hover:text-primary transition-colors"
-                >
-                  Shipping Information
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/returns"
-                  className="hover:text-primary transition-colors"
-                >
-                  Returns & Exchanges
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/privacy"
-                  className="hover:text-primary transition-colors"
-                >
-                  Privacy Policy
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/terms"
-                  className="hover:text-primary transition-colors"
-                >
-                  Terms & Conditions
-                </Link>
-              </li>
+            <h4 className="mb-4 font-heading text-[11px] font-bold uppercase tracking-[0.25em] text-primary">
+              Service
+            </h4>
+            <ul className="space-y-2.5 font-sans text-sm">
+              {[
+                ["/faq", "FAQ"],
+                ["/shipping", "Shipping"],
+                ["/returns", "Returns"],
+                ["/privacy", "Privacy"],
+                ["/terms", "Terms"],
+              ].map(([to, label]) => (
+                <li key={to}>
+                  <Link to={to} className={linkClass}>
+                    {label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
-          {/* Newsletter */}
           <div>
-            <h4 className="font-semibold text-white mb-4">Stay Connected</h4>
-            <p className="text-sm mb-4">
-              Subscribe to get special offers, free giveaways, and new arrivals.
+            <h4 className="mb-4 font-heading text-[11px] font-bold uppercase tracking-[0.25em] text-primary">
+              Letter
+            </h4>
+            <p className="mb-4 font-sans text-sm text-secondary-foreground/75">
+              One note a month — launches, codes, no spam folder novels.
             </p>
             {subscribed ? (
-              <p className="text-sm text-success">Thanks for subscribing! 🎉</p>
+              <p className="font-heading text-sm font-semibold text-primary">
+                You are on the list. Thank you.
+              </p>
             ) : (
-              <form onSubmit={handleSubscribe} className="flex gap-2">
+              <form onSubmit={handleSubscribe} className="flex flex-col gap-2 sm:flex-row">
                 <Input
                   type="email"
-                  placeholder="Your email"
+                  placeholder="Email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="bg-gray-800 border-gray-700"
+                  className="border-[oklch(88%_0.02_85_/_0.2)] bg-[oklch(16%_0.04_265_/_0.45)] text-secondary-foreground placeholder:text-secondary-foreground/45"
                   required
                 />
-                <Button type="submit" size="sm">
-                  Subscribe
+                <Button type="submit" size="sm" className="shrink-0">
+                  Join
                 </Button>
               </form>
             )}
 
-            {/* Social links */}
-            <div className="flex gap-4 mt-6">
-              <a
-                href="#"
-                className="hover:text-primary transition-colors"
-                aria-label="Facebook"
-              >
-                <Facebook className="h-5 w-5" />
-              </a>
-              <a
-                href="#"
-                className="hover:text-primary transition-colors"
-                aria-label="Twitter"
-              >
-                <Twitter className="h-5 w-5" />
-              </a>
-              <a
-                href="#"
-                className="hover:text-primary transition-colors"
-                aria-label="Instagram"
-              >
-                <Instagram className="h-5 w-5" />
-              </a>
-              <a
-                href="#"
-                className="hover:text-primary transition-colors"
-                aria-label="YouTube"
-              >
-                <Youtube className="h-5 w-5" />
-              </a>
+            <div className="mt-8 flex gap-4">
+              {[
+                [Facebook, "Facebook"],
+                [Twitter, "Twitter"],
+                [Instagram, "Instagram"],
+                [Youtube, "YouTube"],
+              ].map(([Icon, label]) => (
+                <a
+                  key={label}
+                  href="#"
+                  className="text-secondary-foreground/55 transition-colors hover:text-primary"
+                  aria-label={label}
+                >
+                  <Icon className="h-5 w-5" />
+                </a>
+              ))}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Bottom bar */}
-      <div className="border-t border-gray-800">
-        <div className="container-custom py-4">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-sm text-gray-500">
-              © {currentYear} ShopSmart. All rights reserved.
-            </p>
-            <div className="flex items-center gap-4">
-              {/* Payment icons - using text as placeholder */}
-              <div className="flex items-center gap-2 text-xs text-gray-500">
-                <span className="px-2 py-1 bg-gray-800 rounded">Visa</span>
-                <span className="px-2 py-1 bg-gray-800 rounded">
-                  Mastercard
-                </span>
-                <span className="px-2 py-1 bg-gray-800 rounded">PayPal</span>
-                <span className="px-2 py-1 bg-gray-800 rounded">Apple Pay</span>
-              </div>
-            </div>
+      <div className="border-t border-[oklch(88%_0.02_85_/_0.1)]">
+        <div className="container-custom flex flex-col items-center justify-between gap-4 py-5 md:flex-row">
+          <p className="font-sans text-xs text-secondary-foreground/50">
+            © {currentYear} ShopSmart. All rights reserved.
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-2 text-[10px] font-heading font-semibold uppercase tracking-wider text-secondary-foreground/55">
+            {["Visa", "Mastercard", "PayPal", "Apple Pay"].map((label) => (
+              <span
+                key={label}
+                className="rounded border border-[oklch(88%_0.02_85_/_0.12)] px-2 py-1"
+              >
+                {label}
+              </span>
+            ))}
           </div>
         </div>
       </div>

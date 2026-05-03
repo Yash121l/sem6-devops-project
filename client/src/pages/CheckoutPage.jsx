@@ -43,9 +43,9 @@ function CheckoutStepper({ currentStep }) {
               className={cn(
                 "w-10 h-10 rounded-full flex items-center justify-center font-medium text-sm transition-colors",
                 currentStep > step.id
-                  ? "bg-success text-white"
+                  ? "bg-success text-success-foreground"
                   : currentStep === step.id
-                    ? "bg-primary text-white"
+                    ? "bg-primary text-primary-foreground"
                     : "bg-muted text-muted-foreground",
               )}
             >
@@ -89,8 +89,10 @@ function OrderSummarySidebar({ items, subtotal, hasFreeShipping, serverTotals })
   const total = serverTotals ? serverTotals.total : subtotal + shipping + tax;
 
   return (
-    <Card className="p-6">
-      <h3 className="font-semibold mb-4">Order Summary</h3>
+    <Card className="border-border/80 p-6 shadow-sm">
+      <h3 className="mb-4 font-heading text-sm font-bold uppercase tracking-[0.2em] text-muted-foreground">
+        Order summary
+      </h3>
 
       {/* Items preview */}
       <div className="space-y-3 max-h-48 overflow-y-auto">
@@ -651,9 +653,9 @@ export function CheckoutPage() {
   }
 
   return (
-    <div className="min-h-screen bg-muted/30">
+    <div className="min-h-screen bg-muted/40">
       {/* Breadcrumb */}
-      <div className="bg-white border-b py-4">
+      <div className="border-b border-border/80 bg-background/90 py-4 backdrop-blur-sm">
         <div className="container-custom">
           <nav className="flex items-center gap-2 text-sm">
             <Link to="/" className="text-muted-foreground hover:text-primary">
@@ -678,7 +680,7 @@ export function CheckoutPage() {
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Main content */}
           <div className="lg:col-span-2">
-            <Card className="p-6">
+            <Card className="border-border/80 p-6 shadow-sm">
               {step === 1 && (
                 <ShippingStep
                   formData={formData}

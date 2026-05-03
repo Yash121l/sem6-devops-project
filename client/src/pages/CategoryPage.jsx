@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { ProductCard } from "@/components/product/ProductCard";
 import {
@@ -40,7 +41,7 @@ function FilterSidebar({ filters, setFilters, onClose, isMobile }) {
     <div className={cn("space-y-6", isMobile && "p-4")}>
       {isMobile && (
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold text-lg">Filters</h3>
+          <h3 className="font-heading text-lg font-bold">Filters</h3>
           <Button variant="ghost" size="icon" onClick={onClose}>
             <X className="h-5 w-5" />
           </Button>
@@ -49,7 +50,9 @@ function FilterSidebar({ filters, setFilters, onClose, isMobile }) {
 
       {/* Price Range */}
       <div>
-        <h4 className="font-medium mb-3">Price Range</h4>
+        <h4 className="mb-3 font-heading text-xs font-bold uppercase tracking-widest text-muted-foreground">
+          Price range
+        </h4>
         <div className="space-y-2">
           {priceRanges.map((range, index) => (
             <label
@@ -90,7 +93,9 @@ function FilterSidebar({ filters, setFilters, onClose, isMobile }) {
 
       {/* Rating Filter */}
       <div>
-        <h4 className="font-medium mb-3">Rating</h4>
+        <h4 className="mb-3 font-heading text-xs font-bold uppercase tracking-widest text-muted-foreground">
+          Rating
+        </h4>
         <div className="space-y-2">
           {ratings.map((rating) => (
             <label
@@ -106,7 +111,7 @@ function FilterSidebar({ filters, setFilters, onClose, isMobile }) {
               />
               <span className="text-sm flex items-center gap-1">
                 {rating}+ stars
-                <span className="text-yellow-400">★</span>
+                <span className="text-primary/70">★</span>
               </span>
             </label>
           ))}
@@ -123,7 +128,9 @@ function FilterSidebar({ filters, setFilters, onClose, isMobile }) {
 
       {/* Availability */}
       <div>
-        <h4 className="font-medium mb-3">Availability</h4>
+        <h4 className="mb-3 font-heading text-xs font-bold uppercase tracking-widest text-muted-foreground">
+          Availability
+        </h4>
         <label className="flex items-center gap-2 cursor-pointer">
           <input
             type="checkbox"
@@ -141,7 +148,9 @@ function FilterSidebar({ filters, setFilters, onClose, isMobile }) {
 
       {/* Sale Items */}
       <div>
-        <h4 className="font-medium mb-3">Special Offers</h4>
+        <h4 className="mb-3 font-heading text-xs font-bold uppercase tracking-widest text-muted-foreground">
+          Special offers
+        </h4>
         <label className="flex items-center gap-2 cursor-pointer">
           <input
             type="checkbox"
@@ -241,7 +250,7 @@ export function CategoryPage() {
   return (
     <div className="min-h-screen">
       {/* Breadcrumb */}
-      <div className="bg-muted py-4">
+      <div className="border-b border-border/80 bg-background/90 py-4 backdrop-blur-sm">
         <div className="container-custom">
           <nav className="flex items-center gap-2 text-sm">
             <Link to="/" className="text-muted-foreground hover:text-primary">
@@ -259,10 +268,13 @@ export function CategoryPage() {
       <div className="container-custom py-8">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
-            <h1 className="font-heading text-3xl font-bold">
+            <p className="mb-2 font-heading text-[11px] font-bold uppercase tracking-[0.3em] text-primary">
+              Catalog
+            </p>
+            <h1 className="font-heading text-3xl font-extrabold tracking-tight">
               {category?.name || "All Products"}
             </h1>
-            <p className="text-muted-foreground mt-1">
+            <p className="mt-1 font-sans text-sm text-muted-foreground">
               {filteredProducts.length} products found
             </p>
           </div>
@@ -297,21 +309,27 @@ export function CategoryPage() {
             </select>
 
             {/* Grid size toggle */}
-            <div className="hidden md:flex items-center gap-1 border rounded-md">
+            <div className="hidden items-center gap-0 overflow-hidden rounded-lg border border-border/80 md:flex">
               <button
+                type="button"
                 onClick={() => setGridCols(3)}
                 className={cn(
-                  "p-2 rounded-l-md",
-                  gridCols === 3 ? "bg-primary text-white" : "hover:bg-muted",
+                  "p-2 transition-colors",
+                  gridCols === 3
+                    ? "bg-primary text-primary-foreground"
+                    : "hover:bg-muted",
                 )}
               >
                 <Grid className="h-4 w-4" />
               </button>
               <button
+                type="button"
                 onClick={() => setGridCols(4)}
                 className={cn(
-                  "p-2 rounded-r-md",
-                  gridCols === 4 ? "bg-primary text-white" : "hover:bg-muted",
+                  "border-l border-border/80 p-2 transition-colors",
+                  gridCols === 4
+                    ? "bg-primary text-primary-foreground"
+                    : "hover:bg-muted",
                 )}
               >
                 <LayoutGrid className="h-4 w-4" />
@@ -387,9 +405,11 @@ export function CategoryPage() {
       <div className="container-custom pb-16">
         <div className="flex gap-8">
           {/* Desktop sidebar */}
-          <aside className="hidden lg:block w-64 flex-shrink-0">
+          <aside className="hidden w-64 flex-shrink-0 lg:block">
             <div className="sticky top-24">
-              <FilterSidebar filters={filters} setFilters={setFilters} />
+              <Card className="border-border/80 p-4 shadow-sm">
+                <FilterSidebar filters={filters} setFilters={setFilters} />
+              </Card>
             </div>
           </aside>
 
@@ -427,7 +447,7 @@ export function CategoryPage() {
             className="fixed inset-0 bg-black/50 z-50 lg:hidden"
             onClick={() => setShowMobileFilters(false)}
           />
-          <div className="fixed left-0 top-0 h-full w-80 bg-background z-50 lg:hidden overflow-y-auto">
+          <div className="fixed left-0 top-0 z-50 h-full w-80 overflow-y-auto border-r border-border/80 bg-background shadow-xl lg:hidden">
             <FilterSidebar
               filters={filters}
               setFilters={setFilters}

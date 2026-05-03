@@ -42,7 +42,7 @@ function ProductGallery({ images, productName }) {
   return (
     <div className="space-y-4">
       {/* Main image */}
-      <div className="aspect-square rounded-xl overflow-hidden bg-gray-100">
+      <div className="aspect-square overflow-hidden rounded-xl bg-muted">
         <img
           src={images[selectedIndex]}
           alt={productName}
@@ -61,7 +61,7 @@ function ProductGallery({ images, productName }) {
                 "w-20 h-20 rounded-lg overflow-hidden border-2 transition-all",
                 selectedIndex === index
                   ? "border-primary"
-                  : "border-transparent hover:border-gray-300",
+                  : "border-transparent hover:border-border",
               )}
             >
               <img
@@ -116,9 +116,9 @@ function SocialProofBadge({ soldThisWeek }) {
   if (soldThisWeek < 50) return null;
 
   return (
-    <div className="inline-flex items-center gap-2 bg-amber-50 text-amber-700 px-3 py-1.5 rounded-full text-sm">
-      <Users className="h-4 w-4" />
-      <span className="font-medium">
+    <div className="inline-flex items-center gap-2 rounded-lg border border-primary/25 bg-primary/5 px-3 py-2 text-sm text-foreground">
+      <Users className="h-4 w-4 shrink-0 text-primary" aria-hidden />
+      <span className="font-heading font-semibold tracking-tight">
         {soldThisWeek.toLocaleString()} bought this week
       </span>
     </div>
@@ -130,7 +130,7 @@ function SocialProofBadge({ soldThisWeek }) {
  */
 function ReviewCard({ review }) {
   return (
-    <div className="border rounded-lg p-4">
+    <div className="rounded-xl border border-border/80 bg-card p-4 shadow-sm">
       <div className="flex items-start gap-4">
         <img
           src={review.userAvatar}
@@ -213,8 +213,10 @@ export function ProductPage() {
   if (!product) {
     return (
       <div className="container-custom py-16 text-center">
-        <h1 className="text-2xl font-bold mb-4">Product Not Found</h1>
-        <p className="text-muted-foreground mb-6">
+        <h1 className="mb-4 font-heading text-2xl font-extrabold tracking-tight">
+          Product not found
+        </h1>
+        <p className="mb-6 text-muted-foreground">
           The product you're looking for doesn't exist.
         </p>
         <Button asChild>
@@ -270,7 +272,7 @@ export function ProductPage() {
   return (
     <div>
       {/* Breadcrumb */}
-      <div className="bg-muted py-4">
+      <div className="border-b border-border/80 bg-background/90 py-4 backdrop-blur-sm">
         <div className="container-custom">
           <nav className="flex items-center gap-2 text-sm">
             <Link to="/" className="text-muted-foreground hover:text-primary">
@@ -371,7 +373,7 @@ export function ProductPage() {
                         "w-10 h-10 rounded-full border-2 transition-all",
                         selectedColor === color.name
                           ? "border-primary ring-2 ring-primary/20"
-                          : "border-gray-200 hover:border-gray-400",
+                          : "border-border hover:border-primary/40",
                       )}
                       style={{ backgroundColor: color.hex }}
                       title={color.name}
@@ -464,7 +466,7 @@ export function ProductPage() {
             <StockIndicator stock={product.stock} />
 
             {/* Trust badges */}
-            <div className="grid grid-cols-3 gap-4 p-4 bg-muted rounded-lg">
+            <div className="grid grid-cols-3 gap-4 rounded-xl border border-border/70 bg-muted/50 p-4">
               <div className="text-center">
                 <Truck className="h-6 w-6 mx-auto mb-1 text-primary" />
                 <p className="text-xs font-medium">Free Shipping</p>
@@ -486,7 +488,7 @@ export function ProductPage() {
 
         {/* Tabs: Description, Reviews */}
         <div className="mt-12">
-          <div className="border-b">
+          <div className="border-b border-border/80">
             <div className="flex gap-8">
               <button
                 onClick={() => setActiveTab("description")}

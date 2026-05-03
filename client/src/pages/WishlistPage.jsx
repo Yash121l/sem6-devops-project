@@ -42,12 +42,15 @@ export function WishlistPage() {
   if (items.length === 0) {
     return (
       <div className="container-custom py-16">
-        <div className="max-w-md mx-auto text-center">
-          <HeartOff className="h-20 w-20 text-muted-foreground mx-auto mb-6" />
-          <h1 className="font-heading text-2xl font-bold mb-3">
-            Your Wishlist is Empty
+        <div className="mx-auto max-w-md text-center">
+          <HeartOff
+            className="mx-auto mb-6 h-20 w-20 text-muted-foreground"
+            aria-hidden
+          />
+          <h1 className="mb-3 font-heading text-2xl font-extrabold tracking-tight">
+            Your wishlist is empty
           </h1>
-          <p className="text-muted-foreground mb-6">
+          <p className="mb-6 font-sans text-muted-foreground">
             Save items you love by clicking the heart icon on any product.
           </p>
           <Button size="lg" asChild>
@@ -60,11 +63,21 @@ export function WishlistPage() {
 
   return (
     <div className="container-custom py-8">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="font-heading text-2xl lg:text-3xl font-bold flex items-center gap-2">
-          <Heart className="h-6 w-6 text-primary" />
-          My Wishlist ({items.length} {items.length === 1 ? "item" : "items"})
-        </h1>
+      <div className="mb-6 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <span className="flex h-11 w-11 items-center justify-center rounded-lg border border-border/80 bg-card text-primary shadow-sm">
+            <Heart className="h-5 w-5" aria-hidden />
+          </span>
+          <div>
+            <p className="font-heading text-[11px] font-bold uppercase tracking-[0.3em] text-primary">
+              Saved
+            </p>
+            <h1 className="font-heading text-2xl font-extrabold tracking-tight lg:text-3xl">
+              Wishlist ({items.length}{" "}
+              {items.length === 1 ? "item" : "items"})
+            </h1>
+          </div>
+        </div>
         <Button
           variant="ghost"
           className="text-destructive"
@@ -76,30 +89,34 @@ export function WishlistPage() {
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
         {items.map((item) => (
-          <Card key={item.id} className="overflow-hidden">
-            <div className="aspect-square relative">
+          <Card
+            key={item.id}
+            className="overflow-hidden border-border/80 shadow-sm transition-shadow hover:shadow-md"
+          >
+            <div className="relative aspect-square bg-muted">
               <Link to={`/product/${item.slug || item.id}`}>
                 <img
                   src={item.image}
                   alt={item.name}
-                  className="w-full h-full object-cover"
+                  className="h-full w-full object-cover"
                 />
               </Link>
               <button
+                type="button"
                 onClick={() => removeItem(item.id)}
-                className="absolute top-3 right-3 p-2 bg-white rounded-full shadow hover:bg-destructive hover:text-white transition-colors"
+                className="absolute right-3 top-3 rounded-full border border-border/80 bg-background/95 p-2 shadow-sm transition-colors hover:border-destructive/50 hover:bg-destructive hover:text-destructive-foreground"
                 aria-label="Remove from wishlist"
               >
-                <Trash2 className="h-4 w-4" />
+                <Trash2 className="h-4 w-4" aria-hidden />
               </button>
             </div>
             <div className="p-4">
               <Link to={`/product/${item.slug || item.id}`}>
-                <h3 className="font-medium line-clamp-2 hover:text-primary transition-colors">
+                <h3 className="line-clamp-2 font-heading font-semibold tracking-tight transition-colors hover:text-primary">
                   {item.name}
                 </h3>
               </Link>
-              <p className="text-lg font-bold mt-2">
+              <p className="mt-2 font-heading text-lg font-bold tracking-tight">
                 {formatPrice(item.price)}
               </p>
               <Button
