@@ -1,29 +1,27 @@
 # ShopSmart DevOps Project
 
-Full-stack e-commerce coursework project with a React storefront, NestJS backend, automated CI, dependency management, test coverage across multiple layers, and GitHub Actions based EC2 deployment.
+Full-stack e-commerce coursework project with a React storefront, NestJS backend, automated CI, test reports, Terraform on AWS (S3 rubric bucket, VPC, RDS, ECR, EKS), and GitHub Actions that build the API container and roll it out to Kubernetes.
 
 ## Repository Structure
 
 - `client/`: React + Vite frontend
 - `server/`: NestJS backend
+- `terraform/`: AWS infrastructure (S3, VPC, RDS, EKS, ECR)
+- `terraform/bootstrap/`: one-time S3 + DynamoDB for Terraform remote state
+- `k8s/`: Kubernetes manifests for the API on EKS
 - `docs/`: architecture, workflow, and deployment explanations
 - `scripts/`: idempotent setup, validation, and deployment scripts
-- `.github/workflows/`: CI and deployment pipelines
+- `.github/workflows/`: CI and rubric pipeline
 
 ## Implemented Against The Rubric
 
-- Regular engineering workflow support: PR template, contributing guide, and small-scripted quality gates
-- GitHub Actions CI on `push` and `pull_request`
-- Frontend implementation with reusable components and API-backed catalog/auth flows
-- Unit testing with Vitest and Jest
-- Integration testing across frontend app flow and backend module boundaries
-- E2E testing with Playwright
-- PR lint enforcement through CI
-- Dependabot configuration
-- GitHub Actions to EC2 deployment workflow
-- Idempotent automation scripts
-- Husky pre-commit automation with `lint-staged`
-- Written explanations for architecture, workflow, design decisions, and deployment
+- GitHub Actions on `push` and `pull_request` with **unit and integration tests** and **JUnit report artifacts** (Vitest + `jest-junit`)
+- **Terraform**: `fmt`, `init`, `validate`, `plan`; `apply` on `main` when remote state variables are configured
+- **S3**: globally unique bucket name, versioning, encryption, public access blocked
+- **Docker**: multi-stage production image for the API with non-root user and `HEALTHCHECK` ([`server/docker/Dockerfile`](server/docker/Dockerfile))
+- **ECR** push and **EKS** rollout with **LoadBalancer** verification (`curl` to liveness)
+- **Kubernetes**: namespace `shopsmart`, 2 replicas, resource limits, liveness and readiness probes
+- Dependabot, PR template, contributing guide, Husky + `lint-staged`, and written docs
 
 ## Quick Start
 
@@ -43,9 +41,9 @@ Or run the commands individually:
 
 ```bash
 npm run lint --prefix client
-npm test --prefix client
+npm run test:ci --prefix client
 npm run lint --prefix server
-npm test --prefix server
+npm run test:ci --prefix server
 ```
 
 ## Test Layers
@@ -58,16 +56,17 @@ npm test --prefix server
 
 ## CI/CD
 
-- CI workflow: [`.github/workflows/ci.yml`](/Users/yashlunawat/C/sem6/DevOps/sem6-devops-project/.github/workflows/ci.yml)
-- EC2 deploy workflow: [`.github/workflows/deploy-ec2.yml`](/Users/yashlunawat/C/sem6/DevOps/sem6-devops-project/.github/workflows/deploy-ec2.yml)
-- Dependabot config: [`.github/dependabot.yml`](/Users/yashlunawat/C/sem6/DevOps/sem6-devops-project/.github/dependabot.yml)
+- Fast checks: [`.github/workflows/ci.yml`](.github/workflows/ci.yml)
+- **Rubric pipeline** (tests → Terraform → ECR → EKS): [`.github/workflows/rubric-pipeline.yml`](.github/workflows/rubric-pipeline.yml)
+- Deprecated EC2 deploy (manual only): [`.github/workflows/deploy-ec2.yml`](.github/workflows/deploy-ec2.yml)
+- Dependabot: [`.github/dependabot.yml`](.github/dependabot.yml)
 
 ## Documentation
 
-- [Architecture](/Users/yashlunawat/C/sem6/DevOps/sem6-devops-project/docs/architecture.md)
-- [Workflow](/Users/yashlunawat/C/sem6/DevOps/sem6-devops-project/docs/workflow.md)
-- [Deployment](/Users/yashlunawat/C/sem6/DevOps/sem6-devops-project/docs/deployment.md)
-- [Contributing](/Users/yashlunawat/C/sem6/DevOps/sem6-devops-project/CONTRIBUTING.md)
+- [Architecture](docs/architecture.md)
+- [Workflow](docs/workflow.md)
+- [Deployment](docs/deployment.md) — AWS secrets, bootstrap, EKS, teardown
+- [Contributing](CONTRIBUTING.md)
 
 ## Notes
 

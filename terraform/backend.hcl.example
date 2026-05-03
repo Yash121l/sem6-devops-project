@@ -1,0 +1,9 @@
+# Pass this file to: terraform init -backend-config=backend.hcl
+# Values come from `terraform/bootstrap` outputs after one local apply.
+# The placeholders in `terraform/versions.tf` are overridden by these settings.
+
+bucket         = "your-globally-unique-tfstate-bucket"
+key            = "shopsmart/eks/terraform.tfstate"
+region         = "us-east-1"
+dynamodb_table = "terraform-locks-shopsmart"
+encrypt        = true

@@ -1,0 +1,270 @@
+name: Rubric pipeline (tests, Terraform, ECR, EKS)
+
+on:
+  push:
+    branches:
+      - main
+      - "codex/**"
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: rubric-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  client:
+    name: Client tests and reports
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: client
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: client/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run test:ci
+      - name: Upload frontend test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rubric-client-test-reports
+          path: client/reports/
+          if-no-files-found: ignore
+      - run: npm run build
+
+  server:
+    name: Server tests and reports
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run test:ci
+      - name: Upload backend test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rubric-server-test-reports
+          path: |
+            server/reports/
+            server/coverage/
+          if-no-files-found: ignore
+      - run: npm run build
+
+  e2e:
+    name: E2E
+    runs-on: ubuntu-latest
+    needs:
+      - client
+    defaults:
+      run:
+        working-directory: client
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: client/package-lock.json
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+
+  terraform-and-release:
+    name: Terraform, ECR, EKS
+    runs-on: ubuntu-latest
+    needs:
+      - client
+      - server
+      - e2e
+    if: >
+      needs.client.result == 'success' &&
+      needs.server.result == 'success' &&
+      needs.e2e.result == 'success'
+    timeout-minutes: 90
+    env:
+      TF_IN_AUTOMATION: true
+      TF_INPUT: "0"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Require remote state variables on main
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: |
+          if [ -z "${{ vars.TF_STATE_BUCKET }}" ] || [ -z "${{ vars.TF_STATE_DYNAMODB_TABLE }}" ]; then
+            echo "Set GitHub Actions Variables TF_STATE_BUCKET and TF_STATE_DYNAMODB_TABLE (from terraform/bootstrap apply outputs) before deploying from main."
+            exit 1
+          fi
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.0"
+
+      - name: Terraform format check
+        run: terraform fmt -check -recursive ./terraform ./terraform/bootstrap
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Terraform init
+        id: tfinit
+        working-directory: terraform
+        env:
+          STATE_BUCKET: ${{ vars.TF_STATE_BUCKET }}
+          STATE_KEY: ${{ vars.TF_STATE_KEY }}
+          LOCK_TABLE: ${{ vars.TF_STATE_DYNAMODB_TABLE }}
+        run: |
+          set -euo pipefail
+          if [ -n "${STATE_BUCKET}" ] && [ -n "${LOCK_TABLE}" ]; then
+            KEY="${STATE_KEY:-shopsmart/eks/terraform.tfstate}"
+            terraform init -input=false \
+              -backend-config="bucket=${STATE_BUCKET}" \
+              -backend-config="key=${KEY}" \
+              -backend-config="region=${AWS_REGION}" \
+              -backend-config="dynamodb_table=${LOCK_TABLE}" \
+              -backend-config="encrypt=true"
+          else
+            echo "Remote state vars TF_STATE_BUCKET / TF_STATE_DYNAMODB_TABLE not set; using local backend for plan-only."
+            terraform init -input=false -backend=false
+          fi
+
+      - name: Terraform validate
+        working-directory: terraform
+        run: terraform validate
+
+      - name: Terraform plan
+        id: plan
+        working-directory: terraform
+        run: terraform plan -out=tfplan -input=false
+
+      - name: Terraform apply
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        id: apply
+        working-directory: terraform
+        run: |
+          set -euo pipefail
+          terraform apply -auto-approve -input=false tfplan
+          echo "ecr_url=$(terraform output -raw ecr_repository_url)" >> "$GITHUB_OUTPUT"
+          echo "cluster_name=$(terraform output -raw cluster_name)" >> "$GITHUB_OUTPUT"
+
+      - name: Export app secrets for Kubernetes
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        working-directory: terraform
+        run: |
+          set -euo pipefail
+          DBPASS=$(terraform output -raw database_password)
+          echo "::add-mask::$DBPASS"
+          JWT=$(terraform output -raw jwt_secret)
+          echo "::add-mask::$JWT"
+          {
+            echo "DATABASE_HOST=$(terraform output -raw database_host)"
+            echo "DATABASE_PORT=$(terraform output -raw database_port)"
+            echo "DATABASE_NAME=$(terraform output -raw database_name)"
+            echo "DATABASE_USER=$(terraform output -raw database_user)"
+            echo "DATABASE_PASSWORD=${DBPASS}"
+            echo "DATABASE_SSL=false"
+            echo "JWT_SECRET=${JWT}"
+            echo "NODE_ENV=production"
+            echo "PORT=3000"
+            echo "REDIS_HOST=localhost"
+            echo "REDIS_PORT=6379"
+            echo "REDIS_PASSWORD="
+            echo "CORS_ORIGIN=http://localhost:3001"
+          } >> "$GITHUB_ENV"
+
+      - name: Install kubectl
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        uses: azure/setup-kubectl@v4
+        with:
+          version: v1.31.0
+
+      - name: Configure kubectl
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        env:
+          CLUSTER_NAME: ${{ steps.apply.outputs.cluster_name }}
+        run: |
+          set -euo pipefail
+          aws eks update-kubeconfig --name "${CLUSTER_NAME}" --region "${AWS_REGION}"
+
+      - name: Login to Amazon ECR
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push API image
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        env:
+          ECR_URL: ${{ steps.apply.outputs.ecr_url }}
+        run: |
+          set -euo pipefail
+          IMAGE="${ECR_URL}:${GITHUB_SHA}"
+          docker build -t "${IMAGE}" -f server/docker/Dockerfile server
+          docker push "${IMAGE}"
+
+      - name: Apply Kubernetes manifests
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        env:
+          ECR_URL: ${{ steps.apply.outputs.ecr_url }}
+        run: |
+          set -euo pipefail
+          kubectl apply -f k8s/namespace.yaml
+          kubectl create secret generic shopsmart-api-env -n shopsmart \
+            --from-literal=NODE_ENV="${NODE_ENV}" \
+            --from-literal=PORT="${PORT}" \
+            --from-literal=DATABASE_HOST="${DATABASE_HOST}" \
+            --from-literal=DATABASE_PORT="${DATABASE_PORT}" \
+            --from-literal=DATABASE_NAME="${DATABASE_NAME}" \
+            --from-literal=DATABASE_USER="${DATABASE_USER}" \
+            --from-literal=DATABASE_PASSWORD="${DATABASE_PASSWORD}" \
+            --from-literal=DATABASE_SSL="${DATABASE_SSL}" \
+            --from-literal=JWT_SECRET="${JWT_SECRET}" \
+            --from-literal=REDIS_HOST="${REDIS_HOST}" \
+            --from-literal=REDIS_PORT="${REDIS_PORT}" \
+            --from-literal=REDIS_PASSWORD="${REDIS_PASSWORD}" \
+            --from-literal=CORS_ORIGIN="${CORS_ORIGIN}" \
+            --dry-run=client -o yaml | kubectl apply -f -
+          sed "s|IMAGE_PLACEHOLDER|${ECR_URL}:${GITHUB_SHA}|g" k8s/deployment.yaml > /tmp/deployment.rendered.yaml
+          kubectl apply -f /tmp/deployment.rendered.yaml
+          kubectl apply -f k8s/service.yaml
+
+      - name: Wait for rollout and verify load balancer
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: |
+          set -euo pipefail
+          kubectl rollout status deployment/shopsmart-api -n shopsmart --timeout=600s
+          HOST=""
+          for _ in $(seq 1 60); do
+            HOST=$(kubectl get svc shopsmart-api -n shopsmart -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null || true)
+            if [ -n "${HOST}" ]; then
+              break
+            fi
+            echo "Waiting for LoadBalancer hostname..."
+            sleep 10
+          done
+          if [ -z "${HOST}" ]; then
+            echo "LoadBalancer hostname not assigned in time" >&2
+            kubectl get svc shopsmart-api -n shopsmart -o wide || true
+            exit 1
+          fi
+          echo "Service endpoint: http://${HOST}/api/v1/health/liveness"
+          curl -fsS --retry 40 --retry-delay 5 --retry-connrefused "http://${HOST}/api/v1/health/liveness"

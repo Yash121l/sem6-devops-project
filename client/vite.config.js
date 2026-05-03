@@ -28,6 +28,7 @@ export default defineConfig(({ mode }) => {
       environment: "jsdom",
       setupFiles: "./src/setupTests.js",
       exclude: [...configDefaults.exclude, "e2e/**"],
+      reporters: ["default", ["junit", { outputFile: "reports/junit.xml" }]],
     },
   };
 });

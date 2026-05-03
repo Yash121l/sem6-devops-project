@@ -1,31 +1,88 @@
-# EC2 Deployment
+# AWS deployment (Terraform, ECR, EKS)
 
-## GitHub Actions to EC2
+This repository follows the course rubric: **tests → Terraform → Docker (ECR) → Kubernetes (EKS)** via [`.github/workflows/rubric-pipeline.yml`](../.github/workflows/rubric-pipeline.yml).
 
-Deployment is handled by `.github/workflows/deploy-ec2.yml`.
+The legacy EC2 + SSH workflow is deprecated and only runs on `workflow_dispatch`: [`.github/workflows/deploy-ec2.yml`](../.github/workflows/deploy-ec2.yml).
 
-Required secrets:
+## GitHub Actions secrets
 
-- `EC2_HOST`
-- `EC2_USER`
-- `EC2_SSH_KEY`
-- `EC2_APP_DIR`
-- `EC2_SERVICE_NAME`
+Configure under **Settings → Secrets and variables → Actions**.
 
-## Deployment flow
+### Required (AWS)
 
-1. GitHub Actions installs dependencies and builds both applications.
-2. The workflow packages the repository into `release.tar.gz`.
-3. The artifact is copied to the EC2 host over SSH.
-4. `scripts/deploy-ec2.sh` extracts the release into `releases/<sha>`.
-5. Dependencies are installed, apps are built, and the `current` symlink is updated.
-6. The target service is restarted with `systemctl` or `pm2`.
+| Secret | Purpose |
+|--------|---------|
+| `AWS_ACCESS_KEY_ID` | IAM access for Terraform, ECR, and EKS API |
+| `AWS_SECRET_ACCESS_KEY` | IAM secret key |
+| `AWS_REGION` | Region for all resources (for example `us-east-1`) |
+| `AWS_SESSION_TOKEN` | Only when using **temporary** credentials (STS). For long-lived IAM user keys, create the secret empty or omit it in your fork; the `configure-aws-credentials` action treats it as optional. |
 
-## Idempotency
+### Required on `main` (remote Terraform state)
 
-The deploy script is safe to rerun:
+Create **Variables** (not secrets) so `terraform init` can use a shared S3 backend and DynamoDB lock table:
 
-- uses `mkdir -p` for directories
-- recreates the target release directory
-- refreshes the `current` symlink with `ln -sfn`
-- rebuilds the release from the provided artifact
+| Variable | Example | Source |
+|----------|---------|--------|
+| `TF_STATE_BUCKET` | `myorg-shopsmart-tfstate-1234` | Output `state_bucket` from one-time `terraform/bootstrap` apply |
+| `TF_STATE_DYNAMODB_TABLE` | `terraform-locks-shopsmart` | Output `lock_table` from bootstrap |
+| `TF_STATE_KEY` | (optional) `shopsmart/eks/terraform.tfstate` | Default used by workflow if unset |
+
+Pull requests may run `terraform plan` with a **local** backend when these variables are unset (plan only, no state written to the repo). Pushes to `main` **fail fast** if the state variables are missing, so production applies never run without remote state.
+
+## One-time: bootstrap remote state
+
+From your laptop (AWS CLI configured):
+
+```bash
+cd terraform/bootstrap
+terraform init
+terraform apply -var='state_bucket_name=YOUR-GLOBALLY-UNIQUE-TFSTATE-BUCKET' -var='aws_region=us-east-1'
+```
+
+Copy the outputs `state_bucket` and `lock_table` into the GitHub variables above. See also [`terraform/backend.hcl.example`](../terraform/backend.hcl.example) for the `terraform init -backend-config=...` flags used locally.
+
+The root module [`terraform/versions.tf`](../terraform/versions.tf) declares an `s3` backend with **placeholder** `bucket`, `key`, and `dynamodb_table` values. Always override them with `-backend-config` (or a `backend.hcl` file) or use `terraform init -backend=false` for a throwaway local plan.
+
+## What Terraform manages
+
+Root module: [`terraform/`](../terraform/).
+
+- **Rubric S3 bucket**: unique name (`random` suffix), versioning on, SSE-S3 encryption, public access fully blocked.
+- **VPC + NAT**: private subnets for EKS nodes, public subnets for load balancers.
+- **EKS**: managed node group (example sizing), CoreDNS, kube-proxy, Amazon VPC CNI.
+- **ECR**: repository for the NestJS API image.
+- **RDS PostgreSQL**: small instance in private subnets so the API can run migrations and satisfy `/api/v1/health/readiness` (database ping).
+
+Outputs include `ecr_repository_url`, `cluster_name`, database host, and masked secrets for the pipeline (JWT and DB password are generated in Terraform).
+
+## Kubernetes manifests
+
+Directory: [`k8s/`](../k8s/).
+
+- Namespace `shopsmart` (non-default).
+- `Deployment` with **2** replicas, CPU/memory requests and limits, **liveness** and **readiness** HTTP probes on the versioned API health routes.
+- `Service` `type: LoadBalancer` to expose the API.
+
+The GitHub Actions workflow substitutes the ECR image tag (`IMAGE_PLACEHOLDER` in the Deployment) and creates the `shopsmart-api-env` secret from Terraform outputs.
+
+## Local kubectl against EKS
+
+After apply:
+
+```bash
+aws eks update-kubeconfig --region "$AWS_REGION" --name "$(terraform output -raw cluster_name)"
+kubectl get pods,svc -n shopsmart
+```
+
+## Teardown
+
+```bash
+cd terraform
+terraform destroy
+```
+
+Then remove the ECR images and, if desired, delete the bootstrap state bucket after emptying it. EKS and RDS incur ongoing cost until destroyed.
+
+## IAM outline
+
+The CI principal needs broad permissions for a student sandbox, including `eks:*`, `ec2:*` (for VPC and nodes), `iam:*` (EKS service roles), `ecr:*`, `s3:*`, `rds:*`, `dynamodb:*`, and `application-autoscaling` where applicable. Tighten policies for real production accounts.

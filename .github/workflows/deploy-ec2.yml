@@ -1,9 +1,8 @@
-name: Deploy To EC2
+# Deprecated: use `.github/workflows/rubric-pipeline.yml` for the course rubric
+# (Terraform, ECR, EKS). This EC2 + SSH flow is kept only for optional manual runs.
+name: Deploy To EC2 (deprecated)
 
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
 
 concurrency:
