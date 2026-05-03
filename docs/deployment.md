@@ -2,8 +2,6 @@
 
 This repository follows the course rubric: **tests → Terraform → Docker (ECR) → Kubernetes (EKS)** via [`.github/workflows/rubric-pipeline.yml`](../.github/workflows/rubric-pipeline.yml).
 
-If AWS repository secrets are not available (for example on a fork pull request), the workflow still runs **lint, tests, and builds**; the Terraform / deploy job is skipped so checks can pass without your credentials.
-
 ## GitHub Actions secrets
 
 Configure under **Settings → Secrets and variables → Actions**.
