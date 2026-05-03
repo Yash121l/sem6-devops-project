@@ -33,7 +33,7 @@ export const validationSchema = Joi.object({
   BCRYPT_ROUNDS: Joi.number().default(12),
   RATE_LIMIT_TTL: Joi.number().default(60),
   RATE_LIMIT_MAX: Joi.number().default(100),
-  CORS_ORIGIN: Joi.string().default('http://localhost:3001'),
+  CORS_ORIGIN: Joi.string().default('http://localhost:5173'),
 
   // Logging
   LOG_LEVEL: Joi.string().valid('error', 'warn', 'log', 'debug', 'verbose').default('log'),

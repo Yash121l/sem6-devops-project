@@ -190,7 +190,7 @@ jobs:
             echo "REDIS_HOST="
             echo "REDIS_PORT=6379"
             echo "REDIS_PASSWORD="
-            echo "CORS_ORIGIN=http://localhost:3001"
+            echo "CORS_ORIGIN=http://localhost:5173"
             echo "DATABASE_SYNCHRONIZE=true"
             echo "RUN_DB_SEED=true"
           } >> "$GITHUB_ENV"

@@ -26,6 +26,10 @@ The storefront now loads catalog data through an API adapter layer in `client/sr
 
 The server follows NestJS module boundaries: controller -> service -> repository/entity.
 
+## DevOps
+
+See [DevOps guide](./devops.md) for CI/CD, AWS, Kubernetes, and how the client reaches the API in each environment.
+
 ## Quality gates
 
 - ESLint on both client and server.

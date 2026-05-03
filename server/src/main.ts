@@ -52,9 +52,12 @@ async function bootstrap() {
   app.use(helmet());
   app.use(compression());
 
-  // CORS configuration
+  // CORS: dev uses a fixed browser origin; production image serves the Vite build from the same
+  // host as the API (EKS LoadBalancer), so reflect the request Origin (avoids hard-coding LB DNS).
   app.enableCors({
-    origin: configService.get<string>('CORS_ORIGIN', 'http://localhost:3001'),
+    origin: serveStorefront
+      ? true
+      : configService.get<string>('CORS_ORIGIN', 'http://localhost:5173'),
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-ID'],

@@ -1,5 +1,7 @@
 # Development Workflow
 
+For **Docker, EKS, Terraform, CI, and env vars**, see the [DevOps guide](./devops.md).
+
 ## Local setup
 
 1. Run `./scripts/bootstrap.sh`.

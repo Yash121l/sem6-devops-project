@@ -1,5 +1,7 @@
 # AWS deployment (Terraform, ECR, EKS)
 
+**Start here for the full picture:** [DevOps guide](./devops.md) (local stack, CI, K8s, env vars, troubleshooting). This file focuses on **AWS secrets, Terraform state, and EKS release** details.
+
 This repository follows the course rubric: **tests → Terraform → Docker (ECR) → Kubernetes (EKS)** via [`.github/workflows/rubric-pipeline.yml`](../.github/workflows/rubric-pipeline.yml).
 
 ## GitHub Actions secrets
