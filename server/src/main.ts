@@ -31,6 +31,16 @@ async function bootstrap() {
     existsSync(join(publicDir, 'index.html'));
 
   if (serveStorefront) {
+    // Classic ELB / some LBs reuse keep-alive to targets that are draining or half-dead → intermittent
+    // timeouts (curl 28) or empty replies (curl 52). Closing API responses avoids pinning a bad socket.
+    app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
+      const path = req.originalUrl || req.url || '';
+      if (path.startsWith('/api')) {
+        res.setHeader('Connection', 'close');
+      }
+      next();
+    });
+
     // Register before other middleware so `/` and `/assets/*` are served; `/api/*` falls through to Nest.
     app.use(express.static(publicDir));
     app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -156,10 +166,11 @@ async function bootstrap() {
   const port = configService.get<number>('PORT', 3000);
   await app.listen(port);
 
-  // Avoid intermittent empty responses when the LB idle timeout (~60s) and Node defaults disagree.
+  // Recycle TCP before typical ELB idle (60s) so clients do not sit on half-open keep-alive sockets.
   const httpServer = app.getHttpServer();
-  httpServer.keepAliveTimeout = 65_000;
-  httpServer.headersTimeout = 70_000;
+  httpServer.keepAliveTimeout = serveStorefront ? 30_000 : 65_000;
+  httpServer.headersTimeout = serveStorefront ? 35_000 : 70_000;
+  httpServer.requestTimeout = 120_000;
 
   logger.log(`Application running on port ${port}`);
   logger.log(`Environment: ${configService.get<string>('NODE_ENV')}`);

@@ -222,13 +222,18 @@ Full IAM and teardown notes: [`deployment.md`](./deployment.md).
 
 ```bash
 HOST="<paste-elb-dns>"
-curl -fsS -m 15 "http://${HOST}/api/v1/health/liveness"
-curl -fsS -m 15 "http://${HOST}/api/v1/health/readiness"
-curl -fsS -m 30 -X POST "http://${HOST}/api/v1/cart/items" \
+# Optional: force a new TCP hop from curl to the LB (helps debug classic ELB keep-alive quirks)
+CURL_API=(curl -fsS -H "Connection: close")
+
+"${CURL_API[@]}" -m 15 "http://${HOST}/api/v1/health/liveness"
+"${CURL_API[@]}" -m 15 "http://${HOST}/api/v1/health/readiness"
+"${CURL_API[@]}" -m 30 -X POST "http://${HOST}/api/v1/cart/items" \
   -H "Content-Type: application/json" \
   -H "x-session-id: test-session-$(date +%s)" \
   -d '{"productId":"<uuid>","variantId":"<uuid>","quantity":1}'
 ```
+
+The production image sets **`Connection: close` on every `/api/*` response** and uses a **shorter `keepAliveTimeout`** so Node recycles sockets before stale ELB ↔ pod pairs cause empty replies (`curl 52`) or probe timeouts (`curl 28`).
 
 Use `productId` / `variantId` from your seeded catalog (e.g. `GET /api/v1/products` after deploy). A **404** is immediate (unknown variant); a **hang** usually means DB connectivity, pool exhaustion, or a second replica stuck on startup DDL—this repo defaults to **one replica** while `DATABASE_SYNCHRONIZE=true` in CI.
 
