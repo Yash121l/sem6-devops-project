@@ -59,10 +59,8 @@ resource "aws_eks_cluster" "this" {
 
   bootstrap_self_managed_addons = false
 
-  depends_on = local.create_eks_cluster_iam ? [
-    aws_iam_role_policy_attachment.eks_cluster_policy[0],
-    aws_iam_role_policy_attachment.eks_vpc_controller[0],
-  ] : [module.vpc]
+  # depends_on must be a static list (no conditionals). Ordering for self-created IAM
+  # roles is handled implicitly via role_arn -> aws_iam_role; policy attachments share that role.
 
   tags = { Environment = var.environment }
 }
@@ -156,14 +154,11 @@ resource "aws_eks_node_group" "this" {
     max_unavailable = 1
   }
 
-  depends_on = concat(
-    local.create_eks_node_iam ? [
-      aws_iam_role_policy_attachment.eks_node_worker[0],
-      aws_iam_role_policy_attachment.eks_node_cni[0],
-      aws_iam_role_policy_attachment.eks_node_ecr[0],
-    ] : [],
-    [aws_eks_addon.vpc_cni, aws_eks_addon.kube_proxy],
-  )
+  # Static depends_on only (Terraform rejects conditionals/concat here). Addons before nodes.
+  depends_on = [
+    aws_eks_addon.vpc_cni,
+    aws_eks_addon.kube_proxy,
+  ]
 
   tags = { Environment = var.environment }
 }
