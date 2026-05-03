@@ -5,9 +5,35 @@
 # to roles your lab pre-provisions (see docs/deployment.md).
 
 locals {
-  # Trim GitHub / console paste whitespace so ARNs match and account checks work.
-  eks_cluster_role_input = trimspace(var.eks_cluster_iam_role_arn)
-  eks_node_role_input    = trimspace(var.eks_node_iam_role_arn)
+  # Trim paste whitespace; fix common IAM ARN typos (Vocareum / copy-paste).
+  _eks_cluster_trim = trimspace(var.eks_cluster_iam_role_arn)
+  _eks_node_trim    = trimspace(var.eks_node_iam_role_arn)
+
+  # Wrong: arn:aws:iam:123456789012:role/x — missing second colon after iam.
+  # Right: arn:aws:iam::123456789012:role/x
+  _eks_cluster_colon = local._eks_cluster_trim == "" ? "" : regexreplace(
+    local._eks_cluster_trim,
+    "^arn:([^:]+):iam:([0-9]{12}:role/)",
+    "arn:$1:iam::$2",
+  )
+  _eks_node_colon = local._eks_node_trim == "" ? "" : regexreplace(
+    local._eks_node_trim,
+    "^arn:([^:]+):iam:([0-9]{12}:role/)",
+    "arn:$1:iam::$2",
+  )
+
+  # UI sometimes concatenates session id and role: role/hex|RealRoleName — keep after last pipe segment.
+  eks_cluster_role_input = local._eks_cluster_colon == "" ? "" : regexreplace(
+    local._eks_cluster_colon,
+    ":role/[^|]+\\|",
+    ":role/",
+  )
+  eks_node_role_input = local._eks_node_colon == "" ? "" : regexreplace(
+    local._eks_node_colon,
+    ":role/[^|]+\\|",
+    ":role/",
+  )
+
   create_eks_cluster_iam = local.eks_cluster_role_input == ""
   create_eks_node_iam    = local.eks_node_role_input == ""
 }

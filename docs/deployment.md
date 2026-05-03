@@ -35,6 +35,8 @@ If Terraform fails with **`iam:CreateRole` AccessDenied** when creating `aws_iam
 | `EKS_CLUSTER_IAM_ROLE_ARN` | Trust **eks.amazonaws.com** for `sts:AssumeRole`. Attach **AmazonEKSClusterPolicy** and **AmazonEKSVPCResourceController**. |
 | `EKS_NODE_IAM_ROLE_ARN` | Trust **ec2.amazonaws.com**. Attach **AmazonEKSWorkerNodePolicy**, **AmazonEKS_CNI_Policy**, **AmazonEC2ContainerRegistryReadOnly**. |
 
+Use the **Role ARN** from IAM (format `arn:aws:iam::123456789012:role/...` — note **`iam::`** with two colons). If Vocareum shows `id|RoleName`, paste the full ARN from the IAM console when possible; Terraform also normalizes a missing `iam:` colon and `role/prefix|suffix` pastes.
+
 Leave both unset if your IAM user may create roles; Terraform will create them as before.
 
 **Troubleshooting `CreateNodegroup` … `Cross-account pass role is not allowed`**
