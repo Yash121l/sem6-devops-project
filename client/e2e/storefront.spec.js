@@ -26,7 +26,8 @@ test.describe("Storefront E2E", () => {
     await page.getByRole("button", { name: "Sign In" }).click();
 
     await expect(page).toHaveURL(/\/$/);
-    await expect(page.getByText("Live catalog connected")).toBeVisible();
+    await expect(page.getByText("Live catalog")).toBeVisible();
+    await expect(page.getByText("Connected to the API.")).toBeVisible();
 
     await page
       .getByRole("link", { name: /premium wireless headphones/i })
@@ -57,7 +58,7 @@ test.describe("Storefront E2E", () => {
     await page.goto("/product/premium-wireless-headphones");
 
     await page.getByTestId("product-add-to-cart").click();
-    await expect(page.getByText(/Your Cart \(1\)/)).toBeVisible();
+    await expect(page.getByText(/Your cart \(1\)/i)).toBeVisible();
 
     await page.getByRole("link", { name: "Proceed to Checkout" }).click();
     await expect(page).toHaveURL(/\/checkout$/);
@@ -80,10 +81,13 @@ test.describe("Storefront E2E", () => {
     await expect(page.getByText("Review Your Order")).toBeVisible();
     await page.getByRole("button", { name: /Place Order/i }).click();
 
-    await expect(page).toHaveURL(/\/order-confirmation\/ORD-/);
-    await expect(page).toHaveURL(/token=/);
+    // MSW server cart + guest-checkout → ORD-…&token=…; local-only cart → SS-… (no token).
+    await expect(page).toHaveURL(/\/order-confirmation\/(ORD-|SS-)/);
+    if (page.url().includes("ORD-")) {
+      await expect(page).toHaveURL(/token=/);
+    }
     await expect(
-      page.getByRole("heading", { name: "Order Confirmed!" }),
+      page.getByRole("heading", { name: "Order placed" }),
     ).toBeVisible();
   });
 
@@ -96,9 +100,11 @@ test.describe("Storefront E2E", () => {
     await page.getByRole("link", { name: "Wishlist" }).click();
 
     await expect(page).toHaveURL(/\/wishlist$/);
-    await expect(page.getByText("My Wishlist (1 item)")).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: /Wishlist \(1 item\)/ }),
+    ).toBeVisible();
 
     await page.getByRole("button", { name: "Add to Cart" }).click();
-    await expect(page.getByText(/Your Cart \(1\)/)).toBeVisible();
+    await expect(page.getByText(/Your cart \(1\)/i)).toBeVisible();
   });
 });

@@ -4,6 +4,7 @@
  */
 
 import React, { useState } from "react";
+import { flushSync } from "react-dom";
 import { Link, useNavigate } from "react-router-dom";
 import {
   ChevronRight,
@@ -629,20 +630,42 @@ export function CheckoutPage() {
           payload,
           idempotencyKey,
         );
-        await clearCart();
-        navigate(
-          `/order-confirmation/${encodeURIComponent(res.orderNumber)}?token=${encodeURIComponent(res.confirmationToken)}`,
-        );
+        flushSync(() => {
+          navigate(
+            `/order-confirmation/${encodeURIComponent(res.orderNumber)}?token=${encodeURIComponent(res.confirmationToken)}`,
+          );
+        });
+        setTimeout(() => {
+          void (async () => {
+            try {
+              await clearCart();
+            } finally {
+              setIsCompletingOrder(false);
+            }
+          })();
+        }, 0);
         return;
       }
       const orderNumber = `SS-${Date.now().toString(36).toUpperCase()}`;
-      navigate(`/order-confirmation/${orderNumber}`);
-      await clearCart();
+      flushSync(() => {
+        navigate(`/order-confirmation/${orderNumber}`);
+      });
+      // Defer clearCart like the server path: otherwise `clearCart` empties `items` while this route
+      // is still mounted (router has not committed yet) and the empty-cart guard sends users to /cart.
+      setTimeout(() => {
+        void (async () => {
+          try {
+            await clearCart();
+          } finally {
+            setIsCompletingOrder(false);
+          }
+        })();
+      }, 0);
+      return;
     } catch (e) {
       setCheckoutError(
         e instanceof Error ? e.message : "Checkout failed. Try again.",
       );
-    } finally {
       setIsCompletingOrder(false);
     }
   };

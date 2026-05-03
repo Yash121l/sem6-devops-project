@@ -161,19 +161,30 @@ export function CartProvider({ children }) {
   }, []);
 
   const refreshServerCart = useCallback(async () => {
-    try {
+    const pull = async () => {
       const cart = await fetchServerCart(accessToken);
       if (!mounted.current) {
         return;
       }
       applyServerCart(cart);
-    } catch (e) {
-      if (!mounted.current) {
-        return;
+    };
+    try {
+      await pull();
+    } catch {
+      // One retry: first request can race MSW / service worker registration in dev and tests.
+      await new Promise((r) => setTimeout(r, 80));
+      try {
+        await pull();
+      } catch (e) {
+        if (!mounted.current) {
+          return;
+        }
+        setServerMode(false);
+        setServerTotals(null);
+        setCartError(
+          e instanceof Error ? e.message : "Cart unavailable",
+        );
       }
-      setServerMode(false);
-      setServerTotals(null);
-      setCartError(e instanceof Error ? e.message : "Cart unavailable");
     }
   }, [accessToken, applyServerCart]);
 

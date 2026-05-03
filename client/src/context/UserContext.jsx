@@ -3,7 +3,7 @@
  * Manages user authentication state with API-first auth and demo fallback
  */
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState } from "react";
 import { loginWithApi, registerWithApi } from "@/lib/storefront";
 import {
   loadStoredJson,
@@ -30,17 +30,13 @@ const UserContext = createContext(null);
  * @param {React.ReactNode} props.children - Child components
  */
 export function UserProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const [session, setSession] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  // Hydrate synchronously so CartProvider's first fetch sees the session (E2E seeds storage before load).
+  const [user, setUser] = useState(() => loadStoredJson(USER_STORAGE_KEY, null));
+  const [session, setSession] = useState(() =>
+    loadStoredJson(SESSION_STORAGE_KEY, null),
+  );
+  const [isLoading] = useState(false);
   const [authSource, setAuthSource] = useState("demo");
-
-  // Load user from localStorage on mount
-  useEffect(() => {
-    setUser(loadStoredJson(USER_STORAGE_KEY, null));
-    setSession(loadStoredJson(SESSION_STORAGE_KEY, null));
-    setIsLoading(false);
-  }, []);
 
   const persistSession = (nextUser, nextSession, source) => {
     setUser(nextUser);
