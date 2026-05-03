@@ -7,7 +7,8 @@ import { HttpExceptionFilter } from '@common/filters/http-exception.filter';
 import { TransformInterceptor } from '@common/interceptors/transform.interceptor';
 import { LoggingInterceptor } from '@common/interceptors/logging.interceptor';
 import helmet from 'helmet';
-import compression from 'compression';
+// `compression` is CJS; a default import can compile to `.default()` and crash at runtime in Docker.
+import compression = require('compression');
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
