@@ -6,32 +6,34 @@
 
 locals {
   # Trim paste whitespace; fix common IAM ARN typos (Vocareum / copy-paste).
+  # Avoid regexreplace() so OpenTofu / all Terraform builds accept this (use replace + regex + split).
   _eks_cluster_trim = trimspace(var.eks_cluster_iam_role_arn)
   _eks_node_trim    = trimspace(var.eks_node_iam_role_arn)
 
   # Wrong: arn:aws:iam:123456789012:role/x — missing second colon after iam.
-  # Right: arn:aws:iam::123456789012:role/x
-  _eks_cluster_colon = local._eks_cluster_trim == "" ? "" : regexreplace(
-    local._eks_cluster_trim,
-    "^arn:([^:]+):iam:([0-9]{12}:role/)",
-    "arn:$1:iam::$2",
-  )
-  _eks_node_colon = local._eks_node_trim == "" ? "" : regexreplace(
-    local._eks_node_trim,
-    "^arn:([^:]+):iam:([0-9]{12}:role/)",
-    "arn:$1:iam::$2",
-  )
+  _eks_cluster_wrong_colon = local._eks_cluster_trim != "" && can(regex("^arn:[^:]+:iam:[0-9]{12}:role/", local._eks_cluster_trim)) && !can(regex("^arn:[^:]+:iam::[0-9]{12}:role/", local._eks_cluster_trim))
+  _eks_node_wrong_colon    = local._eks_node_trim != "" && can(regex("^arn:[^:]+:iam:[0-9]{12}:role/", local._eks_node_trim)) && !can(regex("^arn:[^:]+:iam::[0-9]{12}:role/", local._eks_node_trim))
 
-  # UI sometimes concatenates session id and role: role/hex|RealRoleName — keep after last pipe segment.
-  eks_cluster_role_input = local._eks_cluster_colon == "" ? "" : regexreplace(
-    local._eks_cluster_colon,
-    ":role/[^|]+\\|",
-    ":role/",
+  _eks_cluster_colon = local._eks_cluster_trim == "" ? "" : (local._eks_cluster_wrong_colon ? replace(local._eks_cluster_trim, ":iam:", ":iam::") : local._eks_cluster_trim)
+  _eks_node_colon    = local._eks_node_trim == "" ? "" : (local._eks_node_wrong_colon ? replace(local._eks_node_trim, ":iam:", ":iam::") : local._eks_node_trim)
+
+  # role/hex|RealRoleName — keep segment after the last pipe in the role name (split on first :role/ only).
+  _eks_cluster_parts = local._eks_cluster_colon == "" ? [] : split(":role/", local._eks_cluster_colon)
+  _eks_node_parts    = local._eks_node_colon == "" ? [] : split(":role/", local._eks_node_colon)
+
+  _eks_cluster_prefix = length(local._eks_cluster_parts) >= 2 ? join(":role/", slice(local._eks_cluster_parts, 0, length(local._eks_cluster_parts) - 1)) : local._eks_cluster_colon
+  _eks_cluster_suffix = length(local._eks_cluster_parts) >= 2 ? local._eks_cluster_parts[length(local._eks_cluster_parts) - 1] : ""
+  _eks_node_prefix    = length(local._eks_node_parts) >= 2 ? join(":role/", slice(local._eks_node_parts, 0, length(local._eks_node_parts) - 1)) : local._eks_node_colon
+  _eks_node_suffix    = length(local._eks_node_parts) >= 2 ? local._eks_node_parts[length(local._eks_node_parts) - 1] : ""
+
+  _eks_cluster_suffix_clean = local._eks_cluster_suffix == "" ? "" : try(regex("[^|]+$", local._eks_cluster_suffix), local._eks_cluster_suffix)
+  _eks_node_suffix_clean    = local._eks_node_suffix == "" ? "" : try(regex("[^|]+$", local._eks_node_suffix), local._eks_node_suffix)
+
+  eks_cluster_role_input = local._eks_cluster_colon == "" ? "" : (
+    length(local._eks_cluster_parts) >= 2 ? "${local._eks_cluster_prefix}:role/${local._eks_cluster_suffix_clean}" : local._eks_cluster_colon
   )
-  eks_node_role_input = local._eks_node_colon == "" ? "" : regexreplace(
-    local._eks_node_colon,
-    ":role/[^|]+\\|",
-    ":role/",
+  eks_node_role_input = local._eks_node_colon == "" ? "" : (
+    length(local._eks_node_parts) >= 2 ? "${local._eks_node_prefix}:role/${local._eks_node_suffix_clean}" : local._eks_node_colon
   )
 
   create_eks_cluster_iam = local.eks_cluster_role_input == ""
