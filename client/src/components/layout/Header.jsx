@@ -50,12 +50,14 @@ export function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/90 bg-background/90 shadow-sm backdrop-blur-md supports-[backdrop-filter]:bg-background/75">
-      {/* Top bar - promotions */}
-      <div className="border-b border-border/80 bg-secondary text-secondary-foreground">
-        <div className="container-custom flex flex-wrap items-center justify-center gap-x-6 gap-y-1 py-2 text-[11px] font-heading font-semibold uppercase tracking-[0.2em]">
-          <span>Free shipping $75+</span>
-          <span className="hidden sm:inline text-secondary-foreground/35">|</span>
+    <header className="sticky top-0 z-50 w-full border-b border-border/70 bg-background/95 shadow-sm backdrop-blur-sm supports-[backdrop-filter]:bg-background/90">
+      {/* Top bar — one quiet system line (neutral ramp, not dark secondary) */}
+      <div className="border-b border-border/50 bg-muted/40">
+        <div className="container-custom flex flex-wrap items-center justify-center gap-x-6 gap-y-1 py-2 text-[11px] font-heading font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+          <span className="text-foreground/90">Free shipping $75+</span>
+          <span className="hidden text-muted-foreground/35 sm:inline" aria-hidden>
+            |
+          </span>
           <span>
             Code <span className="text-primary">FREESHIP</span>
           </span>

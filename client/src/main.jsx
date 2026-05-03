@@ -18,10 +18,18 @@ async function enableMocking() {
   });
 }
 
-enableMocking().then(() => {
-  ReactDOM.createRoot(document.getElementById("root")).render(
-    <React.StrictMode>
-      <App />
-    </React.StrictMode>,
-  );
-});
+/** Always mount the app; MSW failures must not block the UI (blank screen). */
+enableMocking()
+  .catch((err) => {
+    console.error(
+      "[MSW] Failed to start — loading without mocks. If you use VITE_ENABLE_MSW=true, try DevTools → Application → Service Workers → Unregister, then hard-refresh.",
+      err,
+    );
+  })
+  .finally(() => {
+    ReactDOM.createRoot(document.getElementById("root")).render(
+      <React.StrictMode>
+        <App />
+      </React.StrictMode>,
+    );
+  });

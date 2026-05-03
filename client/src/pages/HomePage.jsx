@@ -175,15 +175,15 @@ function ConnectionStrip({ source, error }) {
     : "Demo catalog — Fallback data while offline.";
   return (
     <div
-      className={`border-b border-border/60 py-3 text-center text-sm transition-opacity duration-150 ease-out ${
-        isLive ? "bg-background text-muted-foreground" : "bg-muted/50 text-muted-foreground"
-      }`}
+      className={`border-b border-border/60 py-2.5 text-center text-sm transition-opacity duration-150 ease-out ${
+        isLive ? "bg-background" : "bg-muted/30"
+      } text-muted-foreground`}
     >
       <p className="container-custom font-sans">
-        <span className={isLive ? "text-success" : "text-foreground"}>
+        <span className={isLive ? "text-success" : "text-muted-foreground"}>
           {isLive ? "● " : "○ "}
         </span>
-        <span className="text-foreground">{main}</span>
+        <span className="text-foreground/90">{main}</span>
         {error ? (
           <span className="mt-1 block truncate text-xs text-muted-foreground md:mt-0 md:ml-2 md:inline">
             ({error})
