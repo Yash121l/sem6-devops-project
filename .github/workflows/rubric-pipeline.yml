@@ -183,7 +183,7 @@ jobs:
             echo "DATABASE_NAME=$(terraform output -raw database_name)"
             echo "DATABASE_USER=$(terraform output -raw database_user)"
             echo "DATABASE_PASSWORD=${DBPASS}"
-            echo "DATABASE_SSL=false"
+            echo "DATABASE_SSL=true"
             echo "JWT_SECRET=${JWT}"
             echo "NODE_ENV=production"
             echo "PORT=3000"

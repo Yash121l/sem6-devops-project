@@ -84,7 +84,7 @@ Directory: [`k8s/`](../k8s/).
 - `Deployment` with **2** replicas, CPU/memory requests and limits, **liveness** and **readiness** HTTP probes on the versioned API health routes.
 - `Service` `type: LoadBalancer` to expose the API.
 
-The GitHub Actions workflow substitutes the ECR image tag (`IMAGE_PLACEHOLDER` in the Deployment) and creates the `shopsmart-api-env` secret from Terraform outputs. **Do not set `REDIS_HOST=localhost` in Kubernetes** unless you run Redis in the same pod: TypeORM would enable Redis query cache against a non-existent broker and readiness (`/api/v1/health/readiness`, DB ping) can hang until the rollout times out.
+The GitHub Actions workflow substitutes the ECR image tag (`IMAGE_PLACEHOLDER` in the Deployment) and creates the `shopsmart-api-env` secret from Terraform outputs. **`DATABASE_SSL` is set to `true` for EKS** so the API uses TLS to RDS (without it, Postgres returns `no pg_hba.conf entry … no encryption` and pods crash-loop). **Do not set `REDIS_HOST=localhost` in Kubernetes** unless you run Redis in the same pod: TypeORM would enable Redis query cache against a non-existent broker and readiness (`/api/v1/health/readiness`, DB ping) can hang until the rollout times out.
 
 If a rollout still fails, the workflow prints `kubectl describe`, events, and pod logs after `kubectl rollout status` errors.
 

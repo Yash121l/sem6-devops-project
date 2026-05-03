@@ -3,6 +3,8 @@ import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 
 export const getDatabaseConfig = (configService: ConfigService): TypeOrmModuleOptions => {
   const isProduction = configService.get<string>('NODE_ENV') === 'production';
+  const databaseSsl =
+    String(configService.get<string>('DATABASE_SSL', 'false')).toLowerCase() === 'true';
 
   return {
     type: 'postgres',
@@ -14,8 +16,8 @@ export const getDatabaseConfig = (configService: ConfigService): TypeOrmModuleOp
     password: configService.get<string>('DATABASE_PASSWORD'),
     database: configService.get<string>('DATABASE_NAME'),
 
-    // SSL configuration
-    ssl: configService.get<boolean>('DATABASE_SSL') ? { rejectUnauthorized: false } : false,
+    // RDS often requires TLS (`no encryption` in pg_hba is rejected).
+    ssl: databaseSsl ? { rejectUnauthorized: false } : false,
 
     // Entity loading
     entities: [__dirname + '/../**/*.entity{.ts,.js}'],
