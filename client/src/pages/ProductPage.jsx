@@ -3,7 +3,7 @@
  * Product detail page with gallery, variants, reviews, and related products
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import {
   ChevronRight,
@@ -34,40 +34,48 @@ import { getFallbackProductBySlug, pickVariantIdForProduct } from "@/lib/storefr
 import { cn, formatPrice } from "@/lib/utils";
 
 /**
- * Image gallery component with thumbnails
+ * Image gallery — main stack crossfade 200ms; thumbnails 150ms border
  */
 function ProductGallery({ images, productName }) {
   const [selectedIndex, setSelectedIndex] = useState(0);
 
   return (
     <div className="space-y-4">
-      {/* Main image */}
-      <div className="aspect-square overflow-hidden rounded-xl bg-muted">
-        <img
-          src={images[selectedIndex]}
-          alt={productName}
-          className="w-full h-full object-cover"
-        />
+      <div className="relative aspect-square overflow-hidden rounded-xl border border-border/60 bg-muted">
+        {images.map((image, index) => (
+          <img
+            key={`${index}-${image}`}
+            src={image}
+            alt={index === selectedIndex ? productName : ""}
+            aria-hidden={index !== selectedIndex}
+            className={cn(
+              "absolute inset-0 h-full w-full object-cover transition-opacity duration-200 ease-out",
+              index === selectedIndex ? "z-10 opacity-100" : "z-0 opacity-0",
+            )}
+            loading={index === 0 ? "eager" : "lazy"}
+            draggable={false}
+          />
+        ))}
       </div>
 
-      {/* Thumbnails */}
       {images.length > 1 && (
         <div className="flex gap-3">
           {images.map((image, index) => (
             <button
               key={index}
+              type="button"
               onClick={() => setSelectedIndex(index)}
               className={cn(
-                "w-20 h-20 rounded-lg overflow-hidden border-2 transition-all",
+                "h-20 w-20 overflow-hidden rounded-lg border-2 transition-[border-color,opacity] duration-150 ease-out",
                 selectedIndex === index
-                  ? "border-primary"
-                  : "border-transparent hover:border-border",
+                  ? "border-primary opacity-100"
+                  : "border-transparent opacity-80 hover:border-border hover:opacity-100",
               )}
             >
               <img
                 src={image}
                 alt={`${productName} view ${index + 1}`}
-                className="w-full h-full object-cover"
+                className="h-full w-full object-cover"
               />
             </button>
           ))}
@@ -92,10 +100,10 @@ function StockIndicator({ stock }) {
 
   if (stock <= 5) {
     return (
-      <div className="flex items-center gap-2 text-destructive animate-pulse-slow">
-        <Clock className="h-4 w-4" />
-        <span className="font-medium">
-          Only {stock} left in stock - order soon!
+      <div className="flex items-center gap-2 text-destructive">
+        <Clock className="h-4 w-4 shrink-0" aria-hidden />
+        <span className="font-sans text-sm font-medium">
+          Only {stock} left in stock — ships while inventory lasts.
         </span>
       </div>
     );
@@ -198,6 +206,8 @@ export function ProductPage() {
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState("description");
   const [justAdded, setJustAdded] = useState(false);
+  const [buyDocked, setBuyDocked] = useState(false);
+  const buySentinelRef = useRef(null);
 
   const { addItem, toggleCart } = useCart();
   const { isInWishlist, toggleWishlist } = useWishlist();
@@ -212,9 +222,29 @@ export function ProductPage() {
     }
   }, [product]);
 
+  const updateBuyDocked = useCallback(() => {
+    if (typeof window !== "undefined" && window.innerWidth < 1024) {
+      setBuyDocked(false);
+      return;
+    }
+    const el = buySentinelRef.current;
+    if (!el) return;
+    setBuyDocked(el.getBoundingClientRect().top <= 96);
+  }, []);
+
+  useEffect(() => {
+    updateBuyDocked();
+    window.addEventListener("scroll", updateBuyDocked, { passive: true });
+    window.addEventListener("resize", updateBuyDocked);
+    return () => {
+      window.removeEventListener("scroll", updateBuyDocked);
+      window.removeEventListener("resize", updateBuyDocked);
+    };
+  }, [product, updateBuyDocked]);
+
   if (!product) {
     return (
-      <div className="container-custom py-16 text-center">
+      <div className="container-custom py-16 text-center lg:py-24">
         <h1 className="mb-4 font-heading text-2xl font-extrabold tracking-tight">
           Product not found
         </h1>
@@ -276,34 +306,46 @@ export function ProductPage() {
   return (
     <div>
       {/* Breadcrumb */}
-      <div className="border-b border-border/80 bg-background/90 py-4 backdrop-blur-sm">
+      <div className="border-b border-border/60 bg-background py-3">
         <div className="container-custom">
-          <nav className="flex items-center gap-2 text-sm">
-            <Link to="/" className="text-muted-foreground hover:text-primary">
+          <nav className="flex items-center gap-2 font-sans text-sm text-muted-foreground">
+            <Link to="/" className="transition-colors hover:text-primary">
               Home
             </Link>
-            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            <ChevronRight className="h-4 w-4 shrink-0 opacity-60" aria-hidden />
             <Link
               to={`/category/${product.category}`}
-              className="text-muted-foreground hover:text-primary"
+              className="transition-colors hover:text-primary"
             >
               {product.categoryName}
             </Link>
-            <ChevronRight className="h-4 w-4 text-muted-foreground" />
-            <span className="font-medium truncate max-w-[200px]">
+            <ChevronRight className="h-4 w-4 shrink-0 opacity-60" aria-hidden />
+            <span className="truncate font-medium text-foreground max-w-[200px]">
               {product.name}
             </span>
           </nav>
         </div>
       </div>
 
-      <div className="container-custom py-8">
-        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12">
+      <div className="container-custom py-16 lg:py-24">
+        <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
           {/* Product Gallery */}
           <ProductGallery images={product.images} productName={product.name} />
 
-          {/* Product Info — sticky on large screens while scrolling gallery / details */}
-          <div className="space-y-6 lg:sticky lg:top-24 lg:self-start">
+          <div className="min-w-0">
+            <div
+              ref={buySentinelRef}
+              className="pointer-events-none hidden h-px w-full lg:block"
+              aria-hidden
+            />
+            {/* Buy column — sticky + dock cue when stuck */}
+            <div
+              className={cn(
+                "space-y-6 lg:sticky lg:top-24 lg:z-20 lg:self-start lg:transition-[box-shadow,border-color,background-color] lg:duration-200 lg:ease-out",
+                buyDocked &&
+                  "lg:-mx-1 lg:rounded-b-xl lg:border-t lg:border-border/70 lg:bg-background/95 lg:px-1 lg:pb-1 lg:pt-4 lg:shadow-[0_8px_24px_-12px_oklch(22%_0.045_265_/_0.12)]",
+              )}
+            >
             {/* Badges */}
             <div className="flex flex-wrap gap-2">
               {product.isNew && <Badge variant="new">New Arrival</Badge>}
@@ -317,7 +359,7 @@ export function ProductPage() {
 
             {/* Title */}
             <div>
-              <h1 className="font-heading text-2xl lg:text-3xl font-bold">
+              <h1 className="font-heading text-2xl font-extrabold tracking-tight text-foreground lg:text-3xl lg:font-black">
                 {product.name}
               </h1>
               <p className="text-muted-foreground mt-2">
@@ -342,21 +384,21 @@ export function ProductPage() {
             {/* Social proof */}
             <SocialProofBadge soldThisWeek={product.soldThisWeek} />
 
-            {/* Price */}
-            <div className="flex items-baseline gap-3">
-              <span className="text-3xl font-bold">
+            {/* Price — compare-at + savings inline */}
+            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+              <span className="font-heading text-3xl font-bold tracking-tight text-foreground">
                 {formatPrice(product.price)}
               </span>
-              {product.originalPrice && (
+              {product.originalPrice ? (
                 <>
-                  <span className="text-xl text-muted-foreground line-through">
+                  <span className="font-sans text-lg text-muted-foreground line-through">
                     {formatPrice(product.originalPrice)}
                   </span>
-                  <Badge variant="sale">
+                  <span className="font-sans text-sm font-medium text-primary">
                     Save {formatPrice(product.originalPrice - product.price)}
-                  </Badge>
+                  </span>
                 </>
-              )}
+              ) : null}
             </div>
 
             <Separator />
@@ -376,7 +418,7 @@ export function ProductPage() {
                       className={cn(
                         "w-10 h-10 rounded-full border-2 transition-all",
                         selectedColor === color.name
-                          ? "border-primary ring-2 ring-primary/20"
+                          ? "border-primary"
                           : "border-border hover:border-primary/40",
                       )}
                       style={{ backgroundColor: color.hex }}
@@ -439,7 +481,7 @@ export function ProductPage() {
               <Button
                 size="xl"
                 className={cn(
-                  "flex-1 transition-[transform,box-shadow] duration-200 ease-out active:scale-[0.99]",
+                  "flex-1",
                   justAdded &&
                     "animate-cart-confirm ring-2 ring-primary/30 ring-offset-2 ring-offset-background",
                 )}
@@ -464,7 +506,7 @@ export function ProductPage() {
                 <Heart
                   className={cn(
                     "h-5 w-5",
-                    inWishlist && "fill-red-500 text-red-500",
+                    inWishlist && "fill-primary text-primary",
                   )}
                 />
               </Button>
@@ -492,6 +534,7 @@ export function ProductPage() {
               </div>
             </div>
           </div>
+        </div>
         </div>
 
         {/* Tabs: Description, Reviews */}

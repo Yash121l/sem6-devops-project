@@ -66,7 +66,7 @@ export function ProductCard({ product, className }) {
   return (
     <Card
       className={cn(
-        "group relative overflow-hidden border-border/60 shadow-sm transition-[border-color,box-shadow] duration-200 ease-out hover:border-primary/20 hover:shadow-md",
+        "group relative overflow-hidden border-border/70 shadow-none transition-[border-color,box-shadow] duration-200 ease-out hover:border-primary/25 hover:shadow-md",
         className,
       )}
     >
@@ -75,7 +75,7 @@ export function ProductCard({ product, className }) {
           <img
             src={product.images[0]}
             alt={product.name}
-            className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.04]"
+            className="h-full w-full object-cover transition-transform duration-[400ms] ease-out group-hover:scale-[1.03] group-active:scale-[1.03]"
             loading="lazy"
           />
         </Link>
@@ -103,7 +103,7 @@ export function ProductCard({ product, className }) {
             <Heart
               className={cn(
                 "h-4 w-4",
-                inWishlist && "fill-red-500 text-red-500",
+                inWishlist && "fill-primary text-primary",
               )}
             />
           </Button>
@@ -137,7 +137,7 @@ export function ProductCard({ product, className }) {
           disabled={product.stock === 0}
           onClick={handleAddToCart}
           className={cn(
-            "h-10 w-full font-heading transition-[transform,box-shadow] duration-200 ease-out active:scale-[0.98] disabled:opacity-50",
+            "h-11 min-h-[44px] w-full font-heading transition-[transform,box-shadow] duration-200 ease-out disabled:opacity-50",
             justAdded && "animate-cart-confirm ring-2 ring-primary/30 ring-offset-2 ring-offset-background",
           )}
         >

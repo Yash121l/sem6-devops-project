@@ -1,8 +1,23 @@
-@import url("https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,500;0,7..72,600;1,7..72,400&family=Syne:wght@500;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,500;0,7..72,600;1,7..72,400&family=Syne:wght@500;600;700;800;900&display=swap");
 
 @import "tailwindcss";
 
-/* Theme — warm editorial / catalog noir (Syne + Literata) */
+/*
+  Design tokens — quiet catalog (Syne + Literata, single terracotta primary)
+  ---------------------------------------------------------------------------
+  Typography: Display/H1 Syne 800–900 tight; section Syne 700; eyebrow Syne 600
+  uppercase ~0.3em tracking (max one eyebrow per fold). Body Literata 400–500.
+  UI dense: 14–15px sans on forms/breadcrumbs (Literata or system via text-sm).
+
+  Color: background warm off-white; foreground warm ink; primary = terracotta
+  (use primary + opacity steps /90 /25 /10 — avoid extra accent hues).
+
+  Spacing: 8pt rhythm — section py-16 md:py-24; gap-4 lists, gap-6 grids,
+  gap-8 major columns.
+
+  Depth: surface → card → control; border + at most subtle shadow; no stacked
+  glows. Focus: ring-primary/40 with 2px offset (see :focus-visible below).
+*/
 @theme {
   --color-background: oklch(98% 0.012 85);
   --color-foreground: oklch(22% 0.045 265);
@@ -122,18 +137,6 @@ body {
   font-family: var(--font-family-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-image:
-    radial-gradient(
-      ellipse 120% 70% at 50% -15%,
-      oklch(72% 0.14 38 / 0.12),
-      transparent 55%
-    ),
-    radial-gradient(
-      ellipse 60% 40% at 100% 0%,
-      oklch(45% 0.08 265 / 0.06),
-      transparent 50%
-    );
-  background-attachment: fixed;
 }
 
 h1,
@@ -190,12 +193,12 @@ h6 {
   background-color: oklch(55.1% 0.027 264.364 / 0.5);
 }
 
-/* Focus visible styles */
+/* Focus: ring-primary/40 + 2px offset (login, checkout, contact, inputs) */
 :focus-visible {
   outline: none;
   box-shadow:
     0 0 0 2px var(--color-background),
-    0 0 0 4px var(--color-ring);
+    0 0 0 4px oklch(58% 0.19 38 / 0.4);
 }
 
 /* Page layout */

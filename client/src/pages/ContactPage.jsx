@@ -22,9 +22,9 @@ export function ContactPage() {
 
   return (
     <div className="border-b border-border/80 bg-muted/30">
-      <div className="border-b border-border/80 bg-background/90 py-4 backdrop-blur-sm">
+      <div className="border-b border-border/60 bg-background py-3">
         <div className="container-custom">
-          <nav className="flex items-center gap-2 text-sm text-muted-foreground">
+          <nav className="flex items-center gap-2 font-sans text-sm text-muted-foreground">
             <Link to="/" className="transition-colors hover:text-primary">
               Home
             </Link>
@@ -49,8 +49,8 @@ export function ContactPage() {
         </div>
 
         <div className="mx-auto mt-14 grid max-w-4xl gap-6 md:grid-cols-3">
-          <Card className="border-border/80 p-6 text-center shadow-sm transition-shadow duration-200 hover:shadow-md">
-            <div className="mx-auto mb-4 flex h-11 w-11 items-center justify-center rounded-full border border-border/70 bg-card">
+          <Card className="border-border/70 p-6 text-center shadow-none transition-[border-color,box-shadow] duration-200 ease-out hover:border-primary/20 hover:shadow-md">
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-lg border border-border/70 bg-background">
               <Mail className="h-5 w-5 text-primary" aria-hidden />
             </div>
             <h2 className="font-heading text-xs font-bold uppercase tracking-widest text-muted-foreground">
@@ -63,8 +63,8 @@ export function ContactPage() {
               hello@shopsmart.com
             </a>
           </Card>
-          <Card className="border-border/80 p-6 text-center shadow-sm transition-shadow duration-200 hover:shadow-md">
-            <div className="mx-auto mb-4 flex h-11 w-11 items-center justify-center rounded-full border border-border/70 bg-card">
+          <Card className="border-border/70 p-6 text-center shadow-none transition-[border-color,box-shadow] duration-200 ease-out hover:border-primary/20 hover:shadow-md">
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-lg border border-border/70 bg-background">
               <Clock className="h-5 w-5 text-primary" aria-hidden />
             </div>
             <h2 className="font-heading text-xs font-bold uppercase tracking-widest text-muted-foreground">
@@ -74,8 +74,8 @@ export function ContactPage() {
               Typically under 24 hours, weekdays.
             </p>
           </Card>
-          <Card className="border-border/80 p-6 text-center shadow-sm transition-shadow duration-200 hover:shadow-md">
-            <div className="mx-auto mb-4 flex h-11 w-11 items-center justify-center rounded-full border border-border/70 bg-card">
+          <Card className="border-border/70 p-6 text-center shadow-none transition-[border-color,box-shadow] duration-200 ease-out hover:border-primary/20 hover:shadow-md">
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-lg border border-border/70 bg-background">
               <MessageSquare className="h-5 w-5 text-primary" aria-hidden />
             </div>
             <h2 className="font-heading text-xs font-bold uppercase tracking-widest text-muted-foreground">
@@ -87,7 +87,7 @@ export function ContactPage() {
           </Card>
         </div>
 
-        <Card className="mx-auto mt-12 max-w-xl border-border/80 p-8 shadow-sm">
+        <Card className="mx-auto mt-12 max-w-xl border-border/70 p-8 shadow-sm">
           {sent ? (
             <div className="text-center">
               <p className="font-heading text-lg font-semibold tracking-tight text-foreground">
@@ -130,7 +130,7 @@ export function ContactPage() {
                   id="contact-message"
                   required
                   rows={4}
-                  className="mt-1.5 flex min-h-[120px] w-full rounded-lg border border-input bg-background px-3 py-2 font-sans text-sm ring-offset-background transition-[border-color,box-shadow] duration-200 placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  className="mt-1.5 flex min-h-[120px] w-full rounded-lg border border-input bg-background px-3 py-2 font-sans text-sm ring-offset-background transition-[border-color,box-shadow] duration-200 placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:ring-offset-2"
                   value={form.message}
                   onChange={(e) =>
                     setForm({ ...form, message: e.target.value })

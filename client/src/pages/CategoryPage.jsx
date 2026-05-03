@@ -250,14 +250,14 @@ export function CategoryPage() {
   return (
     <div className="min-h-screen">
       {/* Breadcrumb */}
-      <div className="border-b border-border/80 bg-background/90 py-4 backdrop-blur-sm">
+      <div className="border-b border-border/60 bg-background py-3">
         <div className="container-custom">
-          <nav className="flex items-center gap-2 text-sm">
-            <Link to="/" className="text-muted-foreground hover:text-primary">
+          <nav className="flex items-center gap-2 font-sans text-sm text-muted-foreground">
+            <Link to="/" className="transition-colors hover:text-primary">
               Home
             </Link>
-            <ChevronRight className="h-4 w-4 text-muted-foreground" />
-            <span className="font-medium">
+            <ChevronRight className="h-4 w-4 shrink-0 opacity-60" aria-hidden />
+            <span className="font-medium text-foreground">
               {category?.name || "All Products"}
             </span>
           </nav>
@@ -265,10 +265,10 @@ export function CategoryPage() {
       </div>
 
       {/* Header */}
-      <div className="container-custom py-8">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+      <div className="container-custom py-16 lg:py-24">
+        <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
           <div>
-            <p className="mb-2 font-heading text-[11px] font-bold uppercase tracking-[0.3em] text-primary">
+            <p className="mb-2 font-heading text-[11px] font-semibold uppercase tracking-[0.3em] text-primary">
               Catalog
             </p>
             <h1 className="font-heading text-3xl font-extrabold tracking-tight">
@@ -314,7 +314,7 @@ export function CategoryPage() {
                 type="button"
                 onClick={() => setGridCols(3)}
                 className={cn(
-                  "p-2 transition-colors",
+                  "p-2 transition-colors duration-150 ease-out",
                   gridCols === 3
                     ? "bg-primary text-primary-foreground"
                     : "hover:bg-muted",
@@ -326,7 +326,7 @@ export function CategoryPage() {
                 type="button"
                 onClick={() => setGridCols(4)}
                 className={cn(
-                  "border-l border-border/80 p-2 transition-colors",
+                  "border-l border-border/80 p-2 transition-colors duration-150 ease-out",
                   gridCols === 4
                     ? "bg-primary text-primary-foreground"
                     : "hover:bg-muted",
@@ -402,7 +402,7 @@ export function CategoryPage() {
       </div>
 
       {/* Main content */}
-      <div className="container-custom pb-16">
+      <div className="container-custom pb-16 lg:pb-24">
         <div className="flex gap-8">
           {/* Desktop sidebar */}
           <aside className="hidden w-64 flex-shrink-0 lg:block">
@@ -444,10 +444,10 @@ export function CategoryPage() {
       {showMobileFilters && (
         <>
           <div
-            className="fixed inset-0 bg-black/50 z-50 lg:hidden"
+            className="fixed inset-0 z-50 bg-black/40 transition-opacity duration-200 ease-out lg:hidden"
             onClick={() => setShowMobileFilters(false)}
           />
-          <div className="fixed left-0 top-0 z-50 h-full w-80 overflow-y-auto border-r border-border/80 bg-background shadow-xl lg:hidden">
+          <div className="fixed left-0 top-0 z-50 h-full w-80 overflow-y-auto border-r border-border/80 bg-background shadow-xl transition-transform duration-[250ms] ease-out lg:hidden">
             <FilterSidebar
               filters={filters}
               setFilters={setFilters}

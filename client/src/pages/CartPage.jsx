@@ -75,11 +75,11 @@ function CartItem({ item }) {
 
   return (
     <div className="flex gap-4 py-6">
-      <Link to={productPath} className="flex-shrink-0">
+      <Link to={productPath} className="h-20 w-20 shrink-0 overflow-hidden rounded-lg border border-border/60 sm:h-[5.25rem] sm:w-[5.25rem]">
         <img
           src={item.image}
           alt={item.name}
-          className="w-24 h-24 sm:w-32 sm:h-32 object-cover rounded-lg"
+          className="h-full w-full object-cover"
         />
       </Link>
 
@@ -106,7 +106,7 @@ function CartItem({ item }) {
         </div>
 
         <div className="flex items-center justify-between mt-4">
-          <div className="flex items-center overflow-hidden rounded-md border border-border/80">
+          <div className="flex min-h-11 items-stretch overflow-hidden rounded-md border border-border/80">
             <button
               onClick={() =>
                 updateQuantity(
@@ -117,12 +117,12 @@ function CartItem({ item }) {
                   item.cartItemId,
                 )
               }
-              className="p-2 hover:bg-muted transition-colors"
+              className="flex min-w-11 items-center justify-center px-2 hover:bg-muted transition-colors duration-200 ease-out"
               aria-label="Decrease quantity"
             >
               <Minus className="h-4 w-4" />
             </button>
-            <span className="px-4 min-w-[2.5rem] text-center text-sm font-medium">
+            <span className="flex min-w-[2.75rem] items-center justify-center px-3 text-center text-sm font-medium">
               {item.quantity}
             </span>
             <button
@@ -135,7 +135,7 @@ function CartItem({ item }) {
                   item.cartItemId,
                 )
               }
-              className="p-2 hover:bg-muted transition-colors"
+              className="flex min-w-11 items-center justify-center px-2 hover:bg-muted transition-colors duration-200 ease-out"
               aria-label="Increase quantity"
             >
               <Plus className="h-4 w-4" />
@@ -302,26 +302,25 @@ export function CartPage() {
 
   if (items.length === 0) {
     return (
-      <div className="container-custom py-16">
-        <div className="max-w-md mx-auto text-center">
-          <ShoppingBag className="h-20 w-20 text-muted-foreground mx-auto mb-6" />
-          <h1 className="font-heading text-2xl font-bold mb-3">
-            Your Cart is Empty
+      <div className="container-custom py-16 lg:py-24">
+        <div className="mx-auto max-w-md text-center">
+          <ShoppingBag className="mx-auto mb-6 h-20 w-20 text-muted-foreground" aria-hidden />
+          <h1 className="mb-3 font-heading text-2xl font-bold tracking-tight text-foreground">
+            Your bag is empty
           </h1>
-          <p className="text-muted-foreground mb-6">
-            Looks like you haven't added anything to your cart yet. Start
-            shopping and find something you'll love!
+          <p className="mb-6 font-sans text-muted-foreground">
+            When you&apos;re ready, the edit is one tap away.
           </p>
           <Button size="lg" asChild>
-            <Link to="/">Start Shopping</Link>
+            <Link to="/">Browse the shop</Link>
           </Button>
         </div>
 
         {/* Recommended products */}
         {recommendedProducts.length > 0 && (
-          <div className="mt-16">
-            <h2 className="font-heading text-2xl font-bold mb-6 text-center">
-              Popular Products
+          <div className="mt-16 lg:mt-24">
+            <h2 className="mb-6 text-center font-heading text-2xl font-bold tracking-tight text-foreground">
+              You might like
             </h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-6">
               {recommendedProducts.map((product) => (
@@ -337,22 +336,22 @@ export function CartPage() {
   return (
     <div>
       {/* Breadcrumb */}
-      <div className="border-b border-border/80 bg-background/90 py-4 backdrop-blur-sm">
+      <div className="border-b border-border/60 bg-background py-3">
         <div className="container-custom">
-          <nav className="flex items-center gap-2 text-sm">
-            <Link to="/" className="text-muted-foreground hover:text-primary">
+          <nav className="flex items-center gap-2 font-sans text-sm text-muted-foreground">
+            <Link to="/" className="transition-colors hover:text-primary">
               Home
             </Link>
-            <ChevronRight className="h-4 w-4 text-muted-foreground" />
-            <span className="font-medium">Shopping Cart</span>
+            <ChevronRight className="h-4 w-4 shrink-0 opacity-60" aria-hidden />
+            <span className="font-medium text-foreground">Shopping cart</span>
           </nav>
         </div>
       </div>
 
-      <div className="container-custom py-8">
+      <div className="container-custom py-16 lg:py-24">
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <p className="mb-2 font-heading text-[11px] font-bold uppercase tracking-[0.3em] text-primary">
+            <p className="mb-2 font-heading text-[11px] font-semibold uppercase tracking-[0.3em] text-primary">
               Bag
             </p>
             <h1 className="font-heading text-2xl font-extrabold tracking-tight lg:text-3xl">
